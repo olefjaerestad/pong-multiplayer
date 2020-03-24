@@ -1,0 +1,35 @@
+{
+  "name": "pong-multiplayer",
+  "version": "0.0.1",
+  "description": "Multiplayer Pong!",
+  "main": "server/index.js",
+  "scripts": {
+    "dev": "nodemon server/index.js",
+    "predev": "open http://localhost:3000"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/olefjaerestad/pong-multiplayer.git"
+  },
+  "keywords": [
+    "pong",
+    "game",
+    "multiplayer",
+    "node",
+    "websockets"
+  ],
+  "author": "Ole Kristian Fjaerestad",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/olefjaerestad/pong-multiplayer/issues"
+  },
+  "homepage": "https://github.com/olefjaerestad/pong-multiplayer#readme",
+  "dependencies": {
+    "express": "^4.17.1",
+    "uuid": "^7.0.2",
+    "ws": "^7.2.3"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.2"
+  }
+}
