@@ -6,8 +6,8 @@ export function createLobby() {
 		try {
 			socket.send(JSON.stringify([actionTypes.CREATE_LOBBY]));
 			resolve();
-		} catch(e) {
-			reject(e);
+		} catch(err) {
+			reject(err);
 		}
 	});
 }
@@ -17,19 +17,13 @@ export function createPlayer(username) {
 		try {
 			socket.send(JSON.stringify([actionTypes.CREATE_PLAYER, username]));
 			resolve(username);
-		} catch(e) {
-			reject(e);
+		} catch(err) {
+			reject(err);
 		}
 	});
 }
 
 export function joinLobby(socketId, gamepin) {
-	return new Promise((resolve, reject) => {
-		try {
-			socket.send(JSON.stringify([actionTypes.JOIN_LOBBY, socketId, gamepin]));
-			resolve(gamepin);
-		} catch(e) {
-			reject(e);
-		}
-	});
+	// We don't use Promise here, since the server needs to check if gamepin is valid and can't return the response directly. We handle the response in socket.js.
+	socket.send(JSON.stringify([actionTypes.JOIN_LOBBY, socketId, gamepin]));
 }

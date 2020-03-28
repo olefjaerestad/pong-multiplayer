@@ -13,7 +13,7 @@ const {v4} = require('uuid');
 const fs = require('fs');
 const path = require('path');
 const {actionTypes, extractData} = require('../constants/server');
-const {updateSocketId} = require('./actions')
+const {joinLobbyFail, updateLobbyId, updateSocketId} = require('./actions')
 const ws = new WebSocket.Server({port: 9000});
 const sockets = {}; // WebSocket[]
 const lobbies = {}; // Lobby[]
@@ -22,28 +22,43 @@ let doFireWatchEvent = true;
 const createPlayer = (socketId, username) => {
 	players[socketId] = new Player(socketId, username);
 	console.log('createPlayer');
-	console.log(players);
+	// console.log(players);
 }
 const createLobby = (socketId) => {
-	if (!players[socketId]) return;
-	const lobby = new Lobby(socketId);
-	lobbies[socketId] = lobby;
-	players[socketId].joinLobby(lobby.id);
 	console.log('createLobby');
-	console.log(lobbies);
+	// console.log(lobbies);
+	return new Promise((resolve, reject) => {
+		if (!players[socketId]) reject('You can\'t create a lobby since you\'re not logged in.');
+
+		const lobby = new Lobby(socketId);
+		lobbies[socketId] = lobby;
+		players[socketId].joinLobby(lobby.id)
+			.then(() => resolve(lobby.id))
+			.catch(err => reject(err));
+	});
 }
-const joinLobby = (socketId, gamepin) => {
-	if (!players[socketId]) return;
-	players[socketId].joinLobby(gamepin);
+const joinLobby = (socketId, lobbyId) => {
 	console.log('joinLobby');
-	console.log(lobbies);
+	// console.log(lobbies);
+	return new Promise((resolve, reject) => {
+		if (!players[socketId]) reject('Invalid player ID');
+		if (!lobbies[lobbyId]) reject('Invalid gamepin');
+		players[socketId].joinLobby(lobbyId)
+			.then(() => resolve())
+			.catch(err => reject(err));
+	});
 }
 function Lobby(id) {
 	this.id = id;
 	this.players = [];
 
 	this.addPlayer = function(playerId) {
-		if (this.players.indexOf(playerId) === -1) this.players.push(playerId);
+		return new Promise((resolve, reject) => {
+			if (this.players.indexOf(playerId) !== -1) reject('Player is already in the lobby.');
+
+			this.players.push(playerId);
+			resolve();
+		});
 	}
 	this.removePlayer = function(playerId) {
 		const index = this.players.indexOf(playerId);
@@ -56,13 +71,19 @@ function Player(id, username) {
 	this.lobby = null;
 
 	this.joinLobby = function(lobbyId) {
-		if (!lobbies[lobbyId]) return;
-		
-		this.lobby = lobbyId;
-		for (const lobbyId in lobbies) {
-			lobbies[lobbyId].removePlayer(this.id);
-		}
-		lobbies[lobbyId].addPlayer(this.id);
+		return new Promise((resolve, reject) => {
+			if (!lobbies[lobbyId]) reject('Invalid gamepin');
+
+			for (const lobbyId in lobbies) {
+				lobbies[lobbyId].removePlayer(this.id);
+			}
+			lobbies[lobbyId].addPlayer(this.id)
+				.then(() => {
+					this.lobby = lobbyId;
+					resolve();
+				})
+				.catch(err => reject(err));
+		});
 	}
 }
 
@@ -78,16 +99,25 @@ ws.on('connection', (socket, req) => {
 				createPlayer(socketId, args[0]);
 				break;
 			case actionTypes.CREATE_LOBBY:
-				createLobby(socketId);
+				createLobby(socketId)
+					.then(lobbyId => updateLobbyId(socket, lobbyId))
+					.catch((err) => joinLobbyFail(socket, err));
 				break;
 			case actionTypes.JOIN_LOBBY:
-				joinLobby(args[0], args[1]);
+				joinLobby(args[0], args[1])
+					.then(() => updateLobbyId(socket, args[1]))
+					.catch((err) => joinLobbyFail(socket, err));
 				break;
 			case actionTypes.UPDATE_BALL_POS:
 				break;
 			default:
 				break;
 		}
+	});
+
+	socket.on('close', e => {
+		if (players[socketId]) delete players[socketId];
+		if (lobbies[socketId]) delete lobbies[socketId];
 	});
 });
 

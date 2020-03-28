@@ -4,7 +4,7 @@
  * @param {object} initialState - State that can be subscribed to. Doesn't have to contain all properties up front (but probably should, for readability).
  * @param {object} actions - An object containing functions that can perform CRUD operations on the state. You decide for yourself whether you want to use this or modify the state directly. Can contain both sync and async functions, but to be able to access `this` within, they must not be arrow functions.
  * 
- * @method subscribe - takes a callback function that accepts the following params: prop, oldVal, newVal, obj, state
+ * @method subscribe - takes a callback function that accepts the following params: prop, newVal, oldVal, obj, state
  * @method unsubscribe - takes the same callback as passed to subscribe(). Used for cleanup.
  * 
  * @property {object} state - the state is available in this property, both for read and write operations.
@@ -12,7 +12,7 @@
  * 
  * @example - create a store and update the state directly:
  * const store = new Store({foo: 'bar', myObj: {baz: 'Hello'}, myArr: [1,2,3]});
- * const myCallback = (prop, oldVal, newVal, obj, state) => console.log(prop, oldVal, newVal, obj, state);
+ * const myCallback = (prop, newVal, oldVal, obj, state) => console.log(prop, newVal, oldVal, obj, state);
  * store.subscribe(myCallback); // myCallback will fire whenever a property of store.state changes.
  * store.state.myObj.baz = 'I'm a new value';
  * store.unsubscribe(myCallback); // cleanup
@@ -42,7 +42,7 @@ export class Store {
 			set: (obj, prop, value, receiver) => {
 				const oldVal = obj[prop];
 				obj[prop] = value;
-				this.#subscribedCallbacks.forEach(callback => callback(prop, oldVal, value, obj, this.state));
+				this.#subscribedCallbacks.forEach(callback => callback(prop, value, oldVal, obj, this.state));
 				return true;
 			}
 		}

@@ -11,6 +11,16 @@ socket.addEventListener('message', async ({data}) => {
 		case actionTypes.FILE_CHANGED:
 			setTimeout(() => location.reload(), 500);
 			break;
+		case actionTypes.JOIN_LOBBY_FAIL:
+			const dialog = document.createElement('dialog-message');
+			dialog.setAttribute('message', `Couldn\'t join lobby. Reason: ${args[0]}`);
+			document.body.appendChild(dialog);
+			console.log(action, args);
+			break;
+		case actionTypes.UPDATE_LOBBY_ID:
+			store.actions.setLobbyId(args[0]);
+			console.log(action, args, store.state.lobbyId);
+			break;
 		case actionTypes.UPDATE_SOCKET_ID:
 			store.actions.setSocketId(args[0]);
 			console.log(action, args, store.state.socketId);

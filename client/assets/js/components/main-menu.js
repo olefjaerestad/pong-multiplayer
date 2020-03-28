@@ -2,8 +2,14 @@ import {createPlayer, createLobby, joinLobby} from '../websockets/actions.js';
 import {store} from '../store/store.js';
 
 export class MainMenu extends HTMLElement {
-	isLoggedIn = false;
-	isInLobby = false;
+	static get observedAttributes() { return ['is-logged-in', 'is-in-lobby'] }
+
+	get isLoggedIn() {
+		return this.getAttribute('is-logged-in') === 'true';
+	}
+	get isInLobby() {
+		return this.getAttribute('is-in-lobby') === 'true';
+	}
 
 	render() {
 		this.innerHTML = '';
@@ -24,13 +30,14 @@ export class MainMenu extends HTMLElement {
 				data[row[0]] = row[1];
 			}
 			
-			createPlayer(data.username).then(username => this.isLoggedIn = true).catch(err => this.isLoggedIn = false).finally(() => this.render());
+			createPlayer(data.username)
+				.then(username => this.dispatchEvent(new CustomEvent('created-player')));
 		});
 
 		createLobbyForm.addEventListener('submit', e => {
 			e.preventDefault();
-			// createLobby();
-			createLobby().then(() => this.isInLobby = true).catch(err => this.isInLobby = false).finally(() => this.render());
+
+			createLobby();
 		});
 
 		joinLobbyForm.addEventListener('submit', e => {
@@ -42,8 +49,7 @@ export class MainMenu extends HTMLElement {
 				data[row[0]] = row[1];
 			}
 
-			// joinLobby(store.state.socketId, data.gamepin);
-			joinLobby(store.state.socketId, data.gamepin).then(gamepin => this.isInLobby = true).catch(err => this.isInLobby = false).finally(() => this.render());
+			joinLobby(store.state.socketId, data.gamepin);
 		});
 
 		createPlayerForm.innerHTML = /*html*/`
@@ -80,8 +86,6 @@ export class MainMenu extends HTMLElement {
 
 		if (this.isLoggedIn && this.isInLobby) {
 			this.remove();
-			const pongGame = document.createElement('pong-game');
-			document.body.appendChild(pongGame);
 		} else if (!this.isLoggedIn) {
 			this.innerHTML = '<h1>Pong!</h1>';
 			formContainer.appendChild(createPlayerForm);
@@ -94,6 +98,10 @@ export class MainMenu extends HTMLElement {
 			this.appendChild(formContainer);
 			this.appendChild(style);
 		}
+	}
+
+	attributeChangedCallback(attr, val, prevVal) {
+		this.render();
 	}
 
 	connectedCallback() {
