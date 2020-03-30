@@ -4,8 +4,16 @@ const joinLobbyFail = (socket, reason) => {
 	socket.send(JSON.stringify([actionTypes.JOIN_LOBBY_FAIL, reason]));
 }
 
+const kickPlayers = (sockets, reason) => {
+	sockets.forEach(socket => socket.send(JSON.stringify([actionTypes.KICK, reason])));
+}
+
 const updateLobbyId = (socket, lobbyId) => {
 	socket.send(JSON.stringify([actionTypes.UPDATE_LOBBY_ID, lobbyId]));
+}
+
+const updatePlayersInLobby = (sockets, players) => { // todo: add usernames?
+	sockets.forEach(socket => socket.send(JSON.stringify([actionTypes.UPDATE_PLAYERS_IN_LOBBY, players])));
 }
 
 const updateSocketId = (socket, socketId) => {
@@ -14,6 +22,8 @@ const updateSocketId = (socket, socketId) => {
 
 module.exports = {
 	joinLobbyFail,
+	kickPlayers,
 	updateLobbyId,
+	updatePlayersInLobby,
 	updateSocketId,
 }

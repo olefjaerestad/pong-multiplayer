@@ -13,7 +13,13 @@ const {v4} = require('uuid');
 const fs = require('fs');
 const path = require('path');
 const {actionTypes, extractData} = require('../constants/server');
-const {joinLobbyFail, updateLobbyId, updateSocketId} = require('./actions')
+const {
+	joinLobbyFail,
+	kickPlayers,
+	updateLobbyId, 
+	updatePlayersInLobby,
+	updateSocketId
+} = require('./actions')
 const ws = new WebSocket.Server({port: 9000});
 const sockets = {}; // WebSocket[]
 const lobbies = {}; // Lobby[]
@@ -44,7 +50,7 @@ const joinLobby = (socketId, lobbyId) => {
 		if (!players[socketId]) reject('Invalid player ID');
 		if (!lobbies[lobbyId]) reject('Invalid gamepin');
 		players[socketId].joinLobby(lobbyId)
-			.then(() => resolve())
+			.then(() => resolve(lobbyId))
 			.catch(err => reject(err));
 	});
 }
@@ -85,6 +91,11 @@ function Player(id, username) {
 				.catch(err => reject(err));
 		});
 	}
+
+	this.leaveLobby = function() {
+		Object.values(lobbies).forEach(lobby => lobby.removePlayer(this.id));
+		this.lobby = null;
+	}
 }
 
 ws.on('connection', (socket, req) => {
@@ -100,12 +111,20 @@ ws.on('connection', (socket, req) => {
 				break;
 			case actionTypes.CREATE_LOBBY:
 				createLobby(socketId)
-					.then(lobbyId => updateLobbyId(socket, lobbyId))
+					.then(lobbyId => {
+						const socketsToUpdate = lobbies[lobbyId].players.map(playerId => sockets[playerId]);
+						updateLobbyId(socket, lobbyId);
+						updatePlayersInLobby(socketsToUpdate, lobbies[lobbyId].players.map(playerId => players[playerId].username));
+					})
 					.catch((err) => joinLobbyFail(socket, err));
 				break;
 			case actionTypes.JOIN_LOBBY:
 				joinLobby(args[0], args[1])
-					.then(() => updateLobbyId(socket, args[1]))
+					.then(lobbyId => {
+						const socketsToUpdate = lobbies[lobbyId].players.map(playerId => sockets[playerId]);
+						updateLobbyId(socket, args[1]);
+						updatePlayersInLobby(socketsToUpdate, lobbies[lobbyId].players.map(playerId => players[playerId].username));
+					})
 					.catch((err) => joinLobbyFail(socket, err));
 				break;
 			case actionTypes.UPDATE_BALL_POS:
@@ -116,8 +135,16 @@ ws.on('connection', (socket, req) => {
 	});
 
 	socket.on('close', e => {
-		if (players[socketId]) delete players[socketId];
-		if (lobbies[socketId]) delete lobbies[socketId];
+		if (!players[socketId]) return;
+
+		const playerLobby = lobbies[(players[socketId]).lobby];
+		const socketsToUpdate = playerLobby ? playerLobby.players.map(playerId => sockets[playerId]) : [];
+
+		players[socketId].leaveLobby();
+		updatePlayersInLobby(socketsToUpdate, playerLobby ? playerLobby.players.map(playerId => players[playerId].username) : []);
+
+		delete players[socketId];
+		if (lobbies[socketId]) delete lobbies[socketId] && kickPlayers(socketsToUpdate, 'The game host disconnected.');
 	});
 });
 

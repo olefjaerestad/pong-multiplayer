@@ -25,9 +25,6 @@ socket.addEventListener('message', async ({data}) => {
 			store.actions.setSocketId(args[0]);
 			console.log(action, args, store.state.socketId);
 			break;
-		case actionTypes.UPDATE_BALL_POS:
-			console.log(action, args);
-			break;
 		default:
 			break;
 	}

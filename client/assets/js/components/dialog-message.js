@@ -10,12 +10,20 @@ export class DialogMessage extends HTMLElement {
 				<form method="dialog">
 					<button value="close">Close</button>
 				</form>
-			</dialog>`;
+			</dialog>
+			<style>
+				dialog-message dialog {
+					position: fixed;
+    			top: 20px;
+				}
+			</style>`;
 
 		this.timeoutId = setTimeout(() => this.unrender(), 5000);
 	}
 
 	unrender() {
+		clearTimeout(this.timeoutId);
+		this.dispatchEvent(new CustomEvent('close'));
 		this.remove();
 	}
 
