@@ -12,7 +12,11 @@ const updateLobbyId = (socket, lobbyId) => {
 	socket.send(JSON.stringify([actionTypes.UPDATE_LOBBY_ID, lobbyId]));
 }
 
-const updatePlayersInLobby = (sockets, players) => { // todo: add usernames?
+const updatePlayerPos = (sockets, socketId, pos) => {
+	sockets.forEach(socket => socket.send(JSON.stringify([actionTypes.UPDATE_PLAYER_POS, socketId, pos])));
+}
+
+const updatePlayersInLobby = (sockets, players) => {
 	sockets.forEach(socket => socket.send(JSON.stringify([actionTypes.UPDATE_PLAYERS_IN_LOBBY, players])));
 }
 
@@ -24,6 +28,7 @@ module.exports = {
 	joinLobbyFail,
 	kickPlayers,
 	updateLobbyId,
+	updatePlayerPos,
 	updatePlayersInLobby,
 	updateSocketId,
 }

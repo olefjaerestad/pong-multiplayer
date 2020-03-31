@@ -53,7 +53,7 @@ export class MainMenu extends HTMLElement {
 		});
 
 		createPlayerForm.innerHTML = /*html*/`
-			<input type="text" name="username" placeholder="Username" required>
+			<input type="text" name="username" placeholder="Username" required autofocus>
 			<input type="submit" value="Let's play!">
 		`;
 

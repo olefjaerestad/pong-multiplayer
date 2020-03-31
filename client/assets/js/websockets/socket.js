@@ -4,7 +4,7 @@ import {store} from '../store/store.js';
 export const socket = new WebSocket('ws://localhost:9000');
 
 socket.addEventListener('open', e => console.log(e));
-socket.addEventListener('message', async ({data}) => {
+socket.addEventListener('message', ({data}) => {
 	const [action, ...args] = extractData(data);
 
 	switch (action) {
@@ -15,15 +15,15 @@ socket.addEventListener('message', async ({data}) => {
 			const dialog = document.createElement('dialog-message');
 			dialog.setAttribute('message', `Couldn\'t join lobby. Reason: ${args[0]}`);
 			document.body.appendChild(dialog);
-			console.log(action, args);
+			// console.log(action, args);
 			break;
 		case actionTypes.UPDATE_LOBBY_ID:
 			store.actions.setLobbyId(args[0]);
-			console.log(action, args, store.state.lobbyId);
+			// console.log(action, args, store.state.lobbyId);
 			break;
 		case actionTypes.UPDATE_SOCKET_ID:
 			store.actions.setSocketId(args[0]);
-			console.log(action, args, store.state.socketId);
+			// console.log(action, args, store.state.socketId);
 			break;
 		default:
 			break;

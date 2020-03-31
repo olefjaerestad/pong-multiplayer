@@ -17,6 +17,7 @@ const {
 	joinLobbyFail,
 	kickPlayers,
 	updateLobbyId, 
+	updatePlayerPos,
 	updatePlayersInLobby,
 	updateSocketId
 } = require('./actions')
@@ -54,6 +55,10 @@ const joinLobby = (socketId, lobbyId) => {
 			.catch(err => reject(err));
 	});
 }
+const getOpponents = (socketId) => {
+	const lobby = Object.values(lobbies).find(lobby => lobby.players.includes(socketId));
+	return lobby ? lobby.players.map(playerId => sockets[playerId]) : [];
+}
 function Lobby(id) {
 	this.id = id;
 	this.players = [];
@@ -75,6 +80,11 @@ function Player(id, username) {
 	this.id = id;
 	this.username = username;
 	this.lobby = null;
+	this.width = 70;
+	this.height = 10;
+	this.x = .5; // between 0-1
+	this.velocity = .05;
+	this.score = 0;
 
 	this.joinLobby = function(lobbyId) {
 		return new Promise((resolve, reject) => {
@@ -114,7 +124,8 @@ ws.on('connection', (socket, req) => {
 					.then(lobbyId => {
 						const socketsToUpdate = lobbies[lobbyId].players.map(playerId => sockets[playerId]);
 						updateLobbyId(socket, lobbyId);
-						updatePlayersInLobby(socketsToUpdate, lobbies[lobbyId].players.map(playerId => players[playerId].username));
+						// updatePlayersInLobby(socketsToUpdate, lobbies[lobbyId].players.map(playerId => players[playerId].username));
+						updatePlayersInLobby(socketsToUpdate, lobbies[lobbyId].players.map(playerId => players[playerId]));
 					})
 					.catch((err) => joinLobbyFail(socket, err));
 				break;
@@ -123,11 +134,16 @@ ws.on('connection', (socket, req) => {
 					.then(lobbyId => {
 						const socketsToUpdate = lobbies[lobbyId].players.map(playerId => sockets[playerId]);
 						updateLobbyId(socket, args[1]);
-						updatePlayersInLobby(socketsToUpdate, lobbies[lobbyId].players.map(playerId => players[playerId].username));
+						// updatePlayersInLobby(socketsToUpdate, lobbies[lobbyId].players.map(playerId => players[playerId].username));
+						updatePlayersInLobby(socketsToUpdate, lobbies[lobbyId].players.map(playerId => players[playerId]));
 					})
 					.catch((err) => joinLobbyFail(socket, err));
 				break;
 			case actionTypes.UPDATE_BALL_POS:
+				break;
+			case actionTypes.UPDATE_PLAYER_POS:
+				updatePlayerPos(getOpponents(socketId), socketId, args[0]);
+				// console.log(action, args);
 				break;
 			default:
 				break;
@@ -141,7 +157,7 @@ ws.on('connection', (socket, req) => {
 		const socketsToUpdate = playerLobby ? playerLobby.players.map(playerId => sockets[playerId]) : [];
 
 		players[socketId].leaveLobby();
-		updatePlayersInLobby(socketsToUpdate, playerLobby ? playerLobby.players.map(playerId => players[playerId].username) : []);
+		updatePlayersInLobby(socketsToUpdate, playerLobby ? playerLobby.players.map(playerId => players[playerId]) : []);
 
 		delete players[socketId];
 		if (lobbies[socketId]) delete lobbies[socketId] && kickPlayers(socketsToUpdate, 'The game host disconnected.');

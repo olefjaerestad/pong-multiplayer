@@ -27,3 +27,7 @@ export function joinLobby(socketId, gamepin) {
 	// We don't use Promise here, since the server needs to check if gamepin is valid and can't return the response directly. We handle the response in socket.js.
 	socket.send(JSON.stringify([actionTypes.JOIN_LOBBY, socketId, gamepin]));
 }
+
+export function updatePlayerPos(pos) {
+	socket.send(JSON.stringify([actionTypes.UPDATE_PLAYER_POS, pos]));
+}
