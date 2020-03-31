@@ -1,6 +1,7 @@
 Todo:
 - Move some default logic (e.g. player and ball starting stats) over to the server.
 - Touch support.
+- Make player (and ball) sizes relative to viewport width, to avoid difficulty differences across different widths.
 - When player/ball moves, calculate whether ball is hit and broadcast it to all players in the lobby.
 - "Start game" button with "Game starting in ..." countdown timer.
 - Game Rules: first to x points.

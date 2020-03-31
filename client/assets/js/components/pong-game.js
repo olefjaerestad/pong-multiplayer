@@ -68,7 +68,7 @@ export class PongGame extends HTMLElement {
 		this.keydownHandler = this.keydownHandler.bind(this);
 		this.keyupHandler = this.keyupHandler.bind(this);
 		this.touchmoveHandler = this.touchmoveHandler.bind(this);
-		this.setMyPos = this.setMyPos.bind(this);
+		this.setPlayerPos = this.setPlayerPos.bind(this);
 		// this.setLine1Pos = this.setLine1Pos.bind(this);
 		// this.setLine2Pos = this.setLine2Pos.bind(this);
 		// this.setBallPos = this.setBallPos.bind(this);
@@ -86,13 +86,13 @@ export class PongGame extends HTMLElement {
 		this.c.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
 		Object.values(this.players).forEach((player, i) => this.drawPlayer(player, i));
-		if (this.keyState[39]) this.setMyPos();
-		if (this.keyState[37]) this.setMyPos(false);
+		if (this.keyState[39]) this.setPlayerPos();
+		if (this.keyState[37]) this.setPlayerPos(false);
 
 		this.requestedAnimationFrame = requestAnimationFrame(this.run);
 	}
 
-	setMyPos(toRight) {
+	setPlayerPos(toRight) {
 		if (toRight === undefined) toRight = true;
 
 		const x = this.me.x / (this.canvas.width - this.me.width);
