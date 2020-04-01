@@ -60,6 +60,7 @@ export class PongGame extends HTMLElement {
 		super();
 		this.players = {};
 		this.keyState = {}; // currently pressed keys
+		this.canvasBoundingClientRect = {};
 
 		this.run = this.run.bind(this);
 		this.setElementSizes = this.setElementSizes.bind(this);
@@ -69,6 +70,7 @@ export class PongGame extends HTMLElement {
 		this.keyupHandler = this.keyupHandler.bind(this);
 		this.touchmoveHandler = this.touchmoveHandler.bind(this);
 		this.setPlayerPos = this.setPlayerPos.bind(this);
+		this.startGame = this.startGame.bind(this);
 		// this.setLine1Pos = this.setLine1Pos.bind(this);
 		// this.setLine2Pos = this.setLine2Pos.bind(this);
 		// this.setBallPos = this.setBallPos.bind(this);
@@ -120,14 +122,13 @@ export class PongGame extends HTMLElement {
 
 	setElementSizes() {
 		this.setCanvasSize();
-		// this.player1.y = this.canvas.height-this.player1.height;
-		// this.player1.x = ((this.canvas.width-this.player1.width)/2);
-		// this.player1.width = this.player1.getCalculatedWidth();
+		Object.values(this.players).forEach(player => player.width = this.canvas.width * player.normalizedWidth);
 	}
 
 	setCanvasSize() {
 		this.canvas.width = parseInt(getComputedStyle(this.game).width);
 		this.canvas.height = "ontouchstart" in document.documentElement ? parseInt(getComputedStyle(this.game).height)-100 : parseInt(getComputedStyle(this.game).height);
+		this.canvasBoundingClientRect = this.canvas.getBoundingClientRect();
 	}
 
 	resizeHandler(e) {
@@ -145,23 +146,38 @@ export class PongGame extends HTMLElement {
 	}
 
 	touchmoveHandler(e) {
-		// this.player1.x = Math.min(this.canvas.width-this.player1.width, Math.max(0, e.touches[0].pageX - this.player1.width/2));
+		const touchX = e.touches[0].pageX - this.canvasBoundingClientRect.x;
+		const x = Math.min(this.canvas.width, Math.max(0, touchX));
+		const pos = x / this.canvas.width;
+		updatePlayerPos(pos);
 	}
 
 	addEventListeners() {
 		window.addEventListener('resize', this.resizeHandler);
 		window.addEventListener('keydown', this.keydownHandler);
 		window.addEventListener('keyup', this.keyupHandler);
-		this.addEventListener('touchstart', this.touchmoveHandler);
-		this.addEventListener('touchmove', this.touchmoveHandler);
+		this.canvas.addEventListener('touchstart', this.touchmoveHandler);
+		this.canvas.addEventListener('touchmove', this.touchmoveHandler);
+		this.startButton.addEventListener('click', this.startGame);
 	}
 
 	removeEventListeners() {
 		window.removeEventListener('resize', this.resizeHandler);
 		window.removeEventListener('keydown', this.keydownHandler);
 		window.removeEventListener('keyup', this.keyupHandler);
-		this.removeEventListener('touchstart', this.touchmoveHandler);
-		this.removeEventListener('touchmove', this.touchmoveHandler);
+		this.canvas.removeEventListener('touchstart', this.touchmoveHandler);
+		this.canvas.removeEventListener('touchmove', this.touchmoveHandler);
+		this.startButton.removeEventListener('click', this.startGame);
+	}
+
+	startGame() {
+		console.log('startGame');
+		let countdownSecs = 3;
+		const intervalId = setInterval(() => {
+			console.log(countdownSecs--); // todo: send countdownSecs to server
+			if (countdownSecs === -1) clearInterval(intervalId); // todo: start the game - place the ball on the board
+			// todo: make some variable isPlaying that when true, disables the play button
+		}, 1000);
 	}
 
 	render() {
@@ -170,8 +186,11 @@ export class PongGame extends HTMLElement {
 		this.game.classList.add('game');
 		this.sidebar.classList.add('sidebar');
 		this.scores.classList.add('scores');
+		this.startButton.textContent = 'Start';
+		this.actions.appendChild(this.startButton);
 		this.sidebar.innerHTML = `<h2>Gamepin: ${store.state.lobbyId}</h2>`;
 		this.sidebar.appendChild(this.scores);
+		this.sidebar.appendChild(this.actions);
 		this.game.appendChild(this.canvas);
 		this.style.textContent = style.textContent = /*css*/`
 			pong-game {
@@ -205,6 +224,8 @@ export class PongGame extends HTMLElement {
 		this.game = document.createElement('main');
 		this.sidebar = document.createElement('aside');
 		this.scores = document.createElement('div');
+		this.actions = document.createElement('div');
+		this.startButton = document.createElement('button');
 		this.c = this.canvas.getContext('2d');
 		// this.player1 = new Player(true, this.canvas);
 
@@ -218,7 +239,8 @@ export class PongGame extends HTMLElement {
 					break;
 				case actionTypes.UPDATE_PLAYERS_IN_LOBBY:
 					const players = args[0].reduce((players, player) => {
-						player.x = (this.canvas.width - player.width) * player.x;
+						player.width = this.canvas.width * player.normalizedWidth; // convert from 0-1 to px
+						player.x = (this.canvas.width - player.width) * player.x; // convert from 0-1 to px
 						players[player.id] = player;
 						return players;
 					}, {});
