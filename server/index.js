@@ -57,7 +57,19 @@ ws.on('connection', (socket, req) => {
 					})
 					.catch((err) => joinLobbyFail(socket, err));
 				break;
+			case actionTypes.START_GAME:
+				console.log(action, args);
+				lobbies[args[0]].startGame(args[1]);
+				break;
 			case actionTypes.UPDATE_BALL_POS:
+				break;
+			case actionTypes.UPDATE_BALL_VELOCITY:
+				// console.log(action, args);
+				lobbies[args[0]].updateBallVelocity(args[1]);
+				break;
+			case actionTypes.UPDATE_LOBBY_COUNTDOWN:
+				console.log(action, args);
+				lobbies[args[0]].updateCountdown(args[1]);
 				break;
 			case actionTypes.UPDATE_PLAYER_POS:
 				updatePlayerPos(getOpponents(socketId), socketId, args[0]);

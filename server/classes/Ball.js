@@ -11,12 +11,13 @@ function Ball (/* canvas */) {
 	// this.radius = this.getCalculatedRadius();
 	// this.x = canvas.width / 2;
 	// this.y = canvas.height / 2;
-	this.radius = .1;
-	this.x = .5;
-	this.y = .5;
-	this.velocity = {
+	// this.radius = .1;
+	this.radius = 40;
+	this.x = .5; // 0-1
+	this.y = .5; // 0-1
+	this.velocity = { // 0-1
 		x: 0,
-		y: .05,
+		y: .002,
 	}
 	// this.c = this.canvas.getContext('2d');
 
@@ -41,6 +42,8 @@ Ball.prototype.getDefaultPos = function() {
 Ball.prototype.getDefaultVelocity = function() {
 	return {
 		x: 0,
-		y: .05,
+		y: .002,
 	}
 }
+
+module.exports = Ball;

@@ -8,6 +8,7 @@ function Player(id, username) {
 	this.normalizedWidth = .2; // between 0-1
 	this.height = 10; // px
 	this.x = .5; // between 0-1
+	this.y = null; // px. Client sets this (see PongGame.drawPlayer()).
 	this.velocity = .05;
 	this.score = 0;
 

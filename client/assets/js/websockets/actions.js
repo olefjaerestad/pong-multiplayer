@@ -1,4 +1,5 @@
 import {socket} from './socket.js';
+import {store} from '../store/store.js';
 import {actionTypes} from '../../../../constants/client.js';
 
 export function createLobby() {
@@ -26,6 +27,18 @@ export function createPlayer(username) {
 export function joinLobby(socketId, gamepin) {
 	// We don't use Promise here, since the server needs to check if gamepin is valid and can't return the response directly. We handle the response in socket.js.
 	socket.send(JSON.stringify([actionTypes.JOIN_LOBBY, socketId, gamepin]));
+}
+
+export function startGame() {
+	socket.send(JSON.stringify([actionTypes.START_GAME, store.state.lobbyId]));
+}
+
+export function updateBallVelocity(coords) {
+	socket.send(JSON.stringify([actionTypes.UPDATE_BALL_VELOCITY, store.state.lobbyId, coords]));
+}
+
+export function updateLobbyCountdown(sec) {
+	socket.send(JSON.stringify([actionTypes.UPDATE_LOBBY_COUNTDOWN, store.state.lobbyId, sec]));
 }
 
 export function updatePlayerPos(pos) {
