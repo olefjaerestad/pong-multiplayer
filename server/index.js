@@ -6,6 +6,8 @@
  * https://www.reddit.com/r/gamedev/comments/508xng/websocket_binary_vs_json/
  */
 
+ // todo: replace all callas to updatePlayersInLobby() with joined/left actions
+
 const express = require('express');
 const app = express();
 const WebSocket = require('ws');
@@ -18,6 +20,7 @@ const {createLobby, createPlayer, getOpponents, joinLobby} = require('./function
 const {
 	joinLobbyFail,
 	kickPlayers,
+	leftLobby,
 	updateLobbyId, 
 	updatePlayerPos,
 	updatePlayerScore,
@@ -41,20 +44,16 @@ ws.on('connection', (socket, req) => {
 			case actionTypes.CREATE_LOBBY:
 				createLobby(socketId)
 					.then(lobbyId => {
-						const socketsToUpdate = lobbies[lobbyId].players.map(playerId => sockets[playerId]);
 						updateLobbyId(socket, lobbyId);
-						// updatePlayersInLobby(socketsToUpdate, lobbies[lobbyId].players.map(playerId => players[playerId].username));
-						updatePlayersInLobby(socketsToUpdate, lobbies[lobbyId].players.map(playerId => players[playerId]));
+						updatePlayersInLobby(getOpponents(socketId), lobbies[lobbyId].players.map(playerId => players[playerId]));
 					})
 					.catch((err) => joinLobbyFail(socket, err));
 				break;
 			case actionTypes.JOIN_LOBBY:
 				joinLobby(args[0], args[1])
 					.then(lobbyId => {
-						const socketsToUpdate = lobbies[lobbyId].players.map(playerId => sockets[playerId]);
-						updateLobbyId(socket, args[1]);
-						// updatePlayersInLobby(socketsToUpdate, lobbies[lobbyId].players.map(playerId => players[playerId].username));
-						updatePlayersInLobby(socketsToUpdate, lobbies[lobbyId].players.map(playerId => players[playerId]));
+						updateLobbyId(socket, lobbyId);
+						updatePlayersInLobby(getOpponents(socketId), lobbies[lobbyId].players.map(playerId => players[playerId]));
 					})
 					.catch((err) => joinLobbyFail(socket, err));
 				break;
@@ -82,24 +81,27 @@ ws.on('connection', (socket, req) => {
 			case actionTypes.UPDATE_PLAYER_SCORE:
 				players[args[0]].score = args[1];
 				updatePlayerScore(getOpponents(args[0]), args[0], args[1]);
-				console.log(action, args);
+				// console.log(action, args);
 				break;
 			default:
 				break;
 		}
 	});
 
+	// Cleanup on user disconnect.
 	socket.on('close', e => {
-		if (!players[socketId]) return;
+		if (!players[socketId]) return; // User hasn't joined any lobby.
 
-		const playerLobby = lobbies[(players[socketId]).lobby];
-		const socketsToUpdate = playerLobby ? playerLobby.players.map(playerId => sockets[playerId]) : [];
+		const socketsToUpdate = getOpponents(socketId);
 
 		players[socketId].leaveLobby();
-		updatePlayersInLobby(socketsToUpdate, playerLobby ? playerLobby.players.map(playerId => players[playerId]) : []);
+		leftLobby(socketsToUpdate, socketId);
 
 		delete players[socketId];
-		if (lobbies[socketId]) delete lobbies[socketId] && kickPlayers(socketsToUpdate, 'The game host disconnected.');
+		if (lobbies[socketId]) {
+			delete lobbies[socketId];
+			kickPlayers(socketsToUpdate, 'The game host disconnected.');
+		}
 	});
 });
 

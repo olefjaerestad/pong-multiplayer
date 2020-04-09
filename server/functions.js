@@ -35,7 +35,7 @@ const joinLobby = (socketId, lobbyId) => {
 }
 
 const getOpponents = (socketId) => {
-	const lobby = Object.values(lobbies).find(lobby => lobby.players.includes(socketId));
+	const lobby = lobbies[(players[socketId]).lobby];
 	return lobby ? lobby.players.map(playerId => sockets[playerId]) : [];
 }
 

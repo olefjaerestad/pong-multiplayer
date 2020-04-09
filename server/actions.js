@@ -8,6 +8,10 @@ const kickPlayers = (sockets, reason) => {
 	sockets.forEach(socket => socket.send(JSON.stringify([actionTypes.KICK, reason])));
 }
 
+const leftLobby = (sockets, socketId) => {
+	sockets.forEach(socket => socket.send(JSON.stringify([actionTypes.LEFT_LOBBY, socketId])));
+}
+
 const updateLobbyId = (socket, lobbyId) => {
 	socket.send(JSON.stringify([actionTypes.UPDATE_LOBBY_ID, lobbyId]));
 }
@@ -31,6 +35,7 @@ const updateSocketId = (socket, socketId) => {
 module.exports = {
 	joinLobbyFail,
 	kickPlayers,
+	leftLobby,
 	updateLobbyId,
 	updatePlayerPos,
 	updatePlayerScore,

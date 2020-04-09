@@ -1,6 +1,5 @@
 Todo:
-- When player joins lobby, all player positions (and scores?) are reset. They shouldn't be. Use PLAYER_JOINED, PLAYER_LEFT actions instead of UPDATE_PLAYERS_IN_LOBBY.
-- Differentiate the players, visually.
+- Styling!
 - When clicking "Start" button, disable it until game is over.
 - Game Rules: first to x points.
 - When winner is crowned: "Restart game?" and "Go to main menu" buttons.
@@ -9,8 +8,12 @@ Todo:
 - Restart game.
 - Pause game.
 - Chat? Private and/or public? Premade messages?
+- Store player positions server side, instead of only sending them between players? This way, current player1 position is visible for player2 as soon as he joins.
+- Simpler id's/gamepins?
 
 In progress:
+
+Probably done/Keep an eye on:
 - When player2 joins _after_ the game has started, he gets 2 points the first time player1 fails. Doesn't seem to be consistently reproducable. Fix it though.
 
 Done:
@@ -35,3 +38,5 @@ Done:
 - When player1 moves right, it should move left for player2. And vice versa.
 - Player 2 unable to hit ball after implementing isCrossingBounds. Sometimes able (it seems player1 positions are "the correct ones" and will count towards hits), but ball x direction changes the wrong way. Fix.
 - Scoring.
+- When player joins lobby, all player positions (and scores?) are reset. They shouldn't be. Also, use LEFT_LOBBY action instead of UPDATE_PLAYERS_IN_LOBBY.
+- Differentiate the players, visually.

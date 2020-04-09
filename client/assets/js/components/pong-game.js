@@ -7,7 +7,10 @@ import {resetBallInfo, startGame, updateBallVelocity, updateLobbyCountdown, upda
 const colors = {
 	white: 'hsl(0, 0%, 100%)',
 	black: 'hsl(0, 0%, 0%)',
-	primary: 'hsl(286, 100%, 50%)',
+	// primary: 'hsl(286, 100%, 50%)',
+	primary: 'hsl(297, 100%, 50%)', // magenta
+	secondary: 'hsl(56, 100%, 50%)', // yellow
+	tertiary: 'hsl(191, 98%, 44%)', // blue
 	primaryTransparent: 'hsla(286, 100%, 90%, .4)',
 }
 
@@ -63,7 +66,7 @@ export class PongGame extends HTMLElement {
 		this.currentCountdown = null;
 		this.keyState = {}; // currently pressed keys
 		this.players = {};
-		this.updateScoreTimeout = 0;
+		this.updateScoreTimeoutId = 0;
 
 		this.addEventListeners = this.addEventListeners.bind(this);
 		this.drawBall = this.drawBall.bind(this);
@@ -82,7 +85,6 @@ export class PongGame extends HTMLElement {
 		this.setPlayerPos = this.setPlayerPos.bind(this);
 		this.startCountdown = this.startCountdown.bind(this);
 		this.touchmoveHandler = this.touchmoveHandler.bind(this);
-		// this.setBallPos = this.setBallPos.bind(this);
 	}
 	
 	get isPlayer1() {
@@ -91,6 +93,10 @@ export class PongGame extends HTMLElement {
 
 	get me() {
 		return this.players[store.state.socketId];
+	}
+
+	get player1() {
+		return this.players[store.state.lobbyId];
 	}
 
 	addEventListeners() {
@@ -123,6 +129,11 @@ export class PongGame extends HTMLElement {
 					document.body.appendChild(dialog);
 					// console.log(action, args);
 					break;
+				case actionTypes.LEFT_LOBBY:
+					delete this.players[args[0]];
+					this.drawScores();
+					// console.log(action, args);
+					break;
 				case actionTypes.UPDATE_BALL_INFO:
 					// this.players[args[0]].x = (this.canvas.width - this.players[args[0]].width) * args[1];
 					this.ball = args[0];
@@ -142,7 +153,7 @@ export class PongGame extends HTMLElement {
 					// console.log(action, args);
 					break;
 				case actionTypes.UPDATE_PLAYERS_IN_LOBBY:
-					const players = args[0].reduce((players, player) => {
+					/* const players = args[0].reduce((players, player) => {
 						player.width = this.canvas.width * player.normalizedWidth; // convert from 0-1 to px
 						player.x = (this.canvas.width - player.width) * player.x; // convert from 0-1 to px
 						players[player.id] = player;
@@ -150,6 +161,16 @@ export class PongGame extends HTMLElement {
 					}, {});
 
 					this.players = players; // todo: this resets the position of the players already in lobby
+					this.drawScores();
+					break; */
+					args[0].forEach(player => {
+						if (this.players[player.id]) return; // Don't replace existing players.
+
+						player.width = this.canvas.width * player.normalizedWidth; // Convert from 0-1 to px.
+						player.x = (this.canvas.width - player.width) * player.x; // Convert from 0-1 to px.
+						this.players[player.id] = player;
+					});
+
 					this.drawScores();
 					// console.log(action, args);
 					break;
@@ -177,7 +198,7 @@ export class PongGame extends HTMLElement {
 		const y = coords.y * (this.canvas.height - radius*2 - this.me.height*2) + radius + this.me.height;
 
 		this.c.beginPath();
-		this.c.fillStyle = colors.primary;
+		this.c.fillStyle = colors.tertiary;
 		this.c.arc(x, y, radius, 0, Math.PI * 2);
 		this.c.fill();
 		this.c.closePath();
@@ -201,13 +222,13 @@ export class PongGame extends HTMLElement {
 		const y = isMe ? this.canvas.height-player.height : 0;
 		player.y = y;
 		this.c.beginPath();
-		this.c.fillStyle = colors.primary;
+		this.c.fillStyle = player.id === this.player1.id ? colors.primary : colors.secondary;
 		// this.c.fillRect(player.x, y, player.width, player.height);
 		this.c.fillRect(x, y, player.width, player.height);
 		this.c.font = '10px sans-serif';
 		this.c.fillStyle = colors.black;
 		// this.c.fillText(player.username, player.x, y+player.height, player.width);
-		this.c.fillText(player.username, x, y+player.height, player.width);
+		this.c.fillText(player.username, x, y+player.height);
 		this.c.closePath();
 	}
 
@@ -316,12 +337,15 @@ export class PongGame extends HTMLElement {
 		} else if (isCrossingY && !isCrossingX) {
 			const opponent = movingTowardsMe ? Object.values(this.players)[1] : this.me;
 
-			// Timeout (and consecutive clearTimeout) of minimum 17ms is required so we avoid sending twice to server, since client side code is running in requestAnimationFrame aka 60fps, while server is running in a setTimeout with 30fps.
-			this.updateScoreTimeout = setTimeout(() => {
-				updatePlayerScore(opponent.id, opponent.score+1);
-				resetBallInfo();
-				clearTimeout(this.updateScoreTimeout);
-			}, 500);
+			// Timeout (and consecutive clearTimeout) of minimum 17ms is required so we avoid sending twice to server, since client side code is running in requestAnimationFrame aka 60fps, while server is running in a setTimeout with 30fps. Hopefully the if check will prevent a strange (and hard to reproduce) bug where score would actually be updated twice.
+			if (!this.updateScoreTimeoutId) {
+				this.updateScoreTimeoutId = setTimeout(() => {
+					updatePlayerScore(opponent.id, opponent.score+1);
+					resetBallInfo();
+					clearTimeout(this.updateScoreTimeoutId);
+					this.updateScoreTimeoutId = 0;
+				}, 500);
+			}
 
 			// const {x: newBallX, y: newBallY} = this.ball.getDefaultPos();
 			// const newBallVelocity = this.ball.getDefaultVelocity();

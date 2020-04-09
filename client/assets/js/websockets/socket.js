@@ -30,4 +30,10 @@ socket.addEventListener('message', ({data}) => {
 	}
 });
 socket.addEventListener('error', e => console.log(e));
-socket.addEventListener('close', e => console.log(e));
+socket.addEventListener('close', e => {
+	console.log(e);
+	const dialog = document.createElement('dialog-message');
+	dialog.addEventListener('close', () => location.reload());
+	dialog.setAttribute('message', `You were disconnected from the server. Reason: The server doesn't respond. The game will refresh shortly.`);
+	document.body.appendChild(dialog);
+});
