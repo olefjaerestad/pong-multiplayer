@@ -1,7 +1,9 @@
 Todo:
 - When player joins lobby, all player positions (and scores?) are reset. They shouldn't be. Use PLAYER_JOINED, PLAYER_LEFT actions instead of UPDATE_PLAYERS_IN_LOBBY.
-- When ball moves downwards for Player 1, it should move upwards for Player 2.
-- When ball moves left for Player 1, it should move right for Player 2.
+- Player 2 unable to hit ball after implementing isCrossingBounds. Sometimes able, but ball x direction changes the wrong way. Fix.
+- isCrossingBounds doesn't work across different screen sizes. Ball changes direction too early/late.
+- Differentiate the players, visually.
+- When clicking "Start" button, disable it until game is over.
 - Game Rules: first to x points.
 - When winner is crowned: "Restart game?" and "Go to main menu" buttons.
 - What should happen if more than 2 players join the same lobby? Should it even be possible?
@@ -14,6 +16,8 @@ In progress:
 - Ball: Make sure it reaches the edges at the same time for all players in lobby, regardless of screen width/height.
 - Collision detection: When player/ball moves, calculate whether ball is hit and broadcast it to all players in the lobby.
 - Scoring.
+- When ball moves downwards for Player 1, it should move upwards for Player 2.
+- When ball moves left for Player 1, it should move right for Player 2.
 
 Done:
 - Error handling if joining non-existent lobby.
@@ -28,3 +32,4 @@ Done:
 - "Start game" button with "Game starting in ..." countdown timer.
 - Make player (and ball?) sizes relative to viewport width, to avoid difficulty differences across different widths.
 - Make the ball!
+- When clicking "Start" button, players names turn huge. Fix.

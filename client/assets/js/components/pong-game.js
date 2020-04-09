@@ -77,10 +77,12 @@ export class PongGame extends HTMLElement {
 		this.startCountdown = this.startCountdown.bind(this);
 		this.touchmoveHandler = this.touchmoveHandler.bind(this);
 		// this.setBallPos = this.setBallPos.bind(this);
-		// this.setBallVelocity = this.setBallVelocity.bind(this);
-		
 	}
 	
+	get isPlayer1() {
+		return store.state.socketId === store.state.lobbyId;
+	}
+
 	get me() {
 		return this.players[store.state.socketId];
 	}
@@ -159,8 +161,12 @@ export class PongGame extends HTMLElement {
 		if (!this.ball.x) return;
 
 		const radius = this.ball.radius;
-		const x = this.ball.x*this.canvas.width; // todo: take into account ball radius
-		const y = this.ball.y * (this.canvas.height - radius*2 - this.me.height*2) + radius + this.me.height;
+		const coords = this.isPlayer1 ? {x: this.ball.x, y: this.ball.y} : {x: this.ball.reverseX, y: this.ball.reverseY};
+		// const x = this.ball.x*this.canvas.width; // todo: take into account ball radius
+		// const y = this.ball.y * (this.canvas.height - radius*2 - this.me.height*2) + radius + this.me.height;
+		const x = coords.x * this.canvas.width; // todo: take into account ball radius?
+		const y = coords.y * (this.canvas.height - radius*2 - this.me.height*2) + radius + this.me.height;
+		// console.log(coords.x);
 
 		this.c.beginPath();
 		this.c.fillStyle = colors.primary;
@@ -168,7 +174,7 @@ export class PongGame extends HTMLElement {
 		this.c.fill();
 		this.c.closePath();
 
-		this.setBallVelocity(x, y);
+		this.setBallVelocity(x, y); // Todo?: Normalize values before passing into function? Might fix ball changing x direction too early on variying screen widths? Y axis works on different screen heights, so just do with x whatever we're doing with y, and things should work?
 	}
 
 	drawCountdown() {
@@ -187,6 +193,9 @@ export class PongGame extends HTMLElement {
 		this.c.beginPath();
 		this.c.fillStyle = colors.primary;
 		this.c.fillRect(player.x, y, player.width, player.height);
+		this.c.font = '10px sans-serif';
+		this.c.fillStyle = colors.black;
+		this.c.fillText(player.username, player.x, y+player.height, player.width);
 		this.c.closePath();
 	}
 
@@ -267,7 +276,8 @@ export class PongGame extends HTMLElement {
 
 	setBallVelocity(x, y) { // see ~12:00 here https://www.youtube.com/watch?v=KApAJhkkqkA for more concise implementation
 		const movingTowardsMe = this.ball.velocity.y > 0;
-		const player = movingTowardsMe ? this.me : Object.values(this.players)[1]; // todo: don't crash even if only 1 player.
+		const player = movingTowardsMe ? this.me : Object.values(this.players)[1];
+		if (!player) return;
 		const playerY = movingTowardsMe ? player.y : player.y + player.height;
 		const ballY = movingTowardsMe ? y + this.ball.radius : y - this.ball.radius;
 		const yThreshold = Math.min(Math.abs(this.ball.velocity.y), 9999); // todo: remember velocity.y is 0-1
@@ -276,18 +286,16 @@ export class PongGame extends HTMLElement {
 		const isCrossingX = hitX >= 0 && hitX <= 1;
 		const isCrossingY = movingTowardsMe ? ballY >= playerY && ballY <= playerY + yThreshold : ballY <= playerY && ballY >= playerY - yThreshold;
 		const isCrossingBoundaries = x - this.ball.radius <= 0 || x >= this.canvas.width - this.ball.radius;
+		console.log(x);
 
 		if (isCrossingY && isCrossingX) {
-			// this.ball.velocity.x = 2*Math.sin(phi); // remember velocity.x is 0-1
-			// this.ball.velocity.y = -this.ball.velocity.y;
-			// this.ball.velocity.y = -(this.ball.velocity.y*1.1); // speed increase // todo: remember velocity.y is 0-1
-			const velocityX = 2*Math.sin(phi); // remember velocity.x is 0-1
+			const velocityX = 2*Math.sin(phi) / 1000;
 			const velocityY = -this.ball.velocity.y;
 			// velocityY = -(this.ball.velocity.y*1.1); // speed increase // todo: remember velocity.y is 0-1
 			updateBallVelocity({x: velocityX, y: velocityY});
 		} else if (isCrossingY && !isCrossingX) {
 			if(movingTowardsMe) {
-				++Object.values(this.players)[1].score; // todo: add scoring functionality. // todo: don't crash even if only 1 player.
+				++Object.values(this.players)[1].score; // todo: add scoring functionality. // todo: avoid crashing if only 1 player.
 			} else {
 				++this.me.score;
 			}
@@ -300,7 +308,8 @@ export class PongGame extends HTMLElement {
 		}
 
 		if (isCrossingBoundaries) {
-			this.ball.velocity.x = -this.ball.velocity.x;
+			// this.ball.velocity.x = -this.ball.velocity.x;
+			updateBallVelocity({x: -this.ball.velocity.x, y: this.ball.velocity.y});
 		}
 	}
 

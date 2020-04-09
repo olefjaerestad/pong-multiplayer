@@ -21,7 +21,10 @@ function Lobby(id) {
 	}
 	this.startGame = function() {
 		setInterval(() => {
+			this.ball.x += this.ball.velocity.x;
+			this.ball.reverseX -= this.ball.velocity.x;
 			this.ball.y += this.ball.velocity.y;
+			this.ball.reverseY -= this.ball.velocity.y;
 			this.players.forEach(playerId => sockets[playerId].send(JSON.stringify([actionTypes.UPDATE_BALL_INFO, this.ball])));
 		}, 1000/30);
 	}
