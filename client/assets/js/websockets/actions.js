@@ -29,6 +29,10 @@ export function joinLobby(socketId, gamepin) {
 	socket.send(JSON.stringify([actionTypes.JOIN_LOBBY, socketId, gamepin]));
 }
 
+export function resetBallInfo() {
+	socket.send(JSON.stringify([actionTypes.RESET_BALL_INFO, store.state.lobbyId]));
+}
+
 export function startGame() {
 	socket.send(JSON.stringify([actionTypes.START_GAME, store.state.lobbyId]));
 }
@@ -43,4 +47,8 @@ export function updateLobbyCountdown(sec) {
 
 export function updatePlayerPos(pos) {
 	socket.send(JSON.stringify([actionTypes.UPDATE_PLAYER_POS, pos]));
+}
+
+export function updatePlayerScore(socketId, score) {
+	socket.send(JSON.stringify([actionTypes.UPDATE_PLAYER_SCORE, socketId, score]));
 }

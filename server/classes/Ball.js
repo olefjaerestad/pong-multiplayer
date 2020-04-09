@@ -15,8 +15,8 @@ function Ball (/* canvas */) {
 	this.radius = 40;
 	this.x = .5; // 0-1
 	this.y = .5; // 0-1
-	this.reverseX = .5; // 0-1
-	this.reverseY = .5; // 0-1
+	this.reverseX = .5; // 0-1. This is key since player 1 and 2 has inverted views.
+	this.reverseY = .5; // 0-1. This is key since player 1 and 2 has inverted views.
 	this.velocity = { // 0-1
 		x: 0,
 		y: .002,

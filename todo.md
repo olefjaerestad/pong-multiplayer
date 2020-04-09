@@ -1,7 +1,5 @@
 Todo:
 - When player joins lobby, all player positions (and scores?) are reset. They shouldn't be. Use PLAYER_JOINED, PLAYER_LEFT actions instead of UPDATE_PLAYERS_IN_LOBBY.
-- Player 2 unable to hit ball after implementing isCrossingBounds. Sometimes able, but ball x direction changes the wrong way. Fix.
-- isCrossingBounds doesn't work across different screen sizes. Ball changes direction too early/late.
 - Differentiate the players, visually.
 - When clicking "Start" button, disable it until game is over.
 - Game Rules: first to x points.
@@ -13,11 +11,7 @@ Todo:
 - Chat? Private and/or public? Premade messages?
 
 In progress:
-- Ball: Make sure it reaches the edges at the same time for all players in lobby, regardless of screen width/height.
-- Collision detection: When player/ball moves, calculate whether ball is hit and broadcast it to all players in the lobby.
-- Scoring.
-- When ball moves downwards for Player 1, it should move upwards for Player 2.
-- When ball moves left for Player 1, it should move right for Player 2.
+- When player2 joins _after_ the game has started, he gets 2 points the first time player1 fails. Doesn't seem to be consistently reproducable. Fix it though.
 
 Done:
 - Error handling if joining non-existent lobby.
@@ -33,3 +27,11 @@ Done:
 - Make player (and ball?) sizes relative to viewport width, to avoid difficulty differences across different widths.
 - Make the ball!
 - When clicking "Start" button, players names turn huge. Fix.
+- Collision detection: When player/ball moves, calculate whether ball is hit and broadcast it to all players in the lobby.
+- When ball moves downwards for Player 1, it should move upwards for Player 2.
+- When ball moves left for Player 1, it should move right for Player 2.
+- Ball: Make sure it reaches the edges at the same time for all players in lobby, regardless of screen width/height.
+- isCrossingBounds doesn't work across different screen sizes. Ball changes direction too early/late.
+- When player1 moves right, it should move left for player2. And vice versa.
+- Player 2 unable to hit ball after implementing isCrossingBounds. Sometimes able (it seems player1 positions are "the correct ones" and will count towards hits), but ball x direction changes the wrong way. Fix.
+- Scoring.

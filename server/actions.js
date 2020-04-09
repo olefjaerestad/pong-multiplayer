@@ -16,6 +16,10 @@ const updatePlayerPos = (sockets, socketId, pos) => {
 	sockets.forEach(socket => socket.send(JSON.stringify([actionTypes.UPDATE_PLAYER_POS, socketId, pos])));
 }
 
+const updatePlayerScore = (sockets, socketId, score) => {
+	sockets.forEach(socket => socket.send(JSON.stringify([actionTypes.UPDATE_PLAYER_SCORE, socketId, score])));
+}
+
 const updatePlayersInLobby = (sockets, players) => {
 	sockets.forEach(socket => socket.send(JSON.stringify([actionTypes.UPDATE_PLAYERS_IN_LOBBY, players])));
 }
@@ -29,6 +33,7 @@ module.exports = {
 	kickPlayers,
 	updateLobbyId,
 	updatePlayerPos,
+	updatePlayerScore,
 	updatePlayersInLobby,
 	updateSocketId,
 }

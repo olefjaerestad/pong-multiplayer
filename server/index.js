@@ -20,6 +20,7 @@ const {
 	kickPlayers,
 	updateLobbyId, 
 	updatePlayerPos,
+	updatePlayerScore,
 	updatePlayersInLobby,
 	updateSocketId
 } = require('./actions')
@@ -57,8 +58,11 @@ ws.on('connection', (socket, req) => {
 					})
 					.catch((err) => joinLobbyFail(socket, err));
 				break;
+			case actionTypes.RESET_BALL_INFO:
+				lobbies[args[0]].resetBallInfo();
+				break;
 			case actionTypes.START_GAME:
-				console.log(action, args);
+				// console.log(action, args);
 				lobbies[args[0]].startGame(args[1]);
 				break;
 			case actionTypes.UPDATE_BALL_POS:
@@ -68,12 +72,17 @@ ws.on('connection', (socket, req) => {
 				lobbies[args[0]].updateBallVelocity(args[1]);
 				break;
 			case actionTypes.UPDATE_LOBBY_COUNTDOWN:
-				console.log(action, args);
+				// console.log(action, args);
 				lobbies[args[0]].updateCountdown(args[1]);
 				break;
 			case actionTypes.UPDATE_PLAYER_POS:
 				updatePlayerPos(getOpponents(socketId), socketId, args[0]);
 				// console.log(action, args);
+				break;
+			case actionTypes.UPDATE_PLAYER_SCORE:
+				players[args[0]].score = args[1];
+				updatePlayerScore(getOpponents(args[0]), args[0], args[1]);
+				console.log(action, args);
 				break;
 			default:
 				break;

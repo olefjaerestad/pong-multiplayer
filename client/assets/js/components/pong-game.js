@@ -1,7 +1,7 @@
 import {socket} from '../websockets/socket.js';
 import {actionTypes, extractData} from '../../../../constants/client.js';
 import {store} from '../store/store.js';
-import {updateBallVelocity, startGame, updateLobbyCountdown, updatePlayerPos} from '../websockets/actions.js';
+import {resetBallInfo, startGame, updateBallVelocity, updateLobbyCountdown, updatePlayerPos, updatePlayerScore} from '../websockets/actions.js';
 
 
 const colors = {
@@ -63,11 +63,17 @@ export class PongGame extends HTMLElement {
 		this.currentCountdown = null;
 		this.keyState = {}; // currently pressed keys
 		this.players = {};
+		this.updateScoreTimeout = 0;
 
 		this.addEventListeners = this.addEventListeners.bind(this);
+		this.drawBall = this.drawBall.bind(this);
+		this.drawCountdown = this.drawCountdown.bind(this);
+		this.drawPlayer = this.drawPlayer.bind(this);
+		this.drawScores = this.drawScores.bind(this);
 		this.keydownHandler = this.keydownHandler.bind(this);
 		this.keyupHandler = this.keyupHandler.bind(this);
 		this.removeEventListeners = this.removeEventListeners.bind(this);
+		this.render = this.render.bind(this);
 		this.resizeHandler = this.resizeHandler.bind(this);
 		this.run = this.run.bind(this);
 		this.setBallVelocity = this.setBallVelocity.bind(this);
@@ -126,9 +132,14 @@ export class PongGame extends HTMLElement {
 					this.players[args[0]].x = (this.canvas.width - this.players[args[0]].width) * args[1];
 					// console.log(action, args);
 					break;
+				case actionTypes.UPDATE_PLAYER_SCORE:
+					this.players[args[0]].score = args[1];
+					this.drawScores();
+					// console.log(action, args);
+					break;
 				case actionTypes.UPDATE_LOBBY_COUNTDOWN:
 					this.currentCountdown = args[0];
-					console.log(action, args);
+					// console.log(action, args);
 					break;
 				case actionTypes.UPDATE_PLAYERS_IN_LOBBY:
 					const players = args[0].reduce((players, player) => {
@@ -139,7 +150,7 @@ export class PongGame extends HTMLElement {
 					}, {});
 
 					this.players = players; // todo: this resets the position of the players already in lobby
-					this.updateScores();
+					this.drawScores();
 					// console.log(action, args);
 					break;
 				default:
@@ -162,11 +173,8 @@ export class PongGame extends HTMLElement {
 
 		const radius = this.ball.radius;
 		const coords = this.isPlayer1 ? {x: this.ball.x, y: this.ball.y} : {x: this.ball.reverseX, y: this.ball.reverseY};
-		// const x = this.ball.x*this.canvas.width; // todo: take into account ball radius
-		// const y = this.ball.y * (this.canvas.height - radius*2 - this.me.height*2) + radius + this.me.height;
-		const x = coords.x * this.canvas.width; // todo: take into account ball radius?
+		const x = coords.x * (this.canvas.width - radius*2) + radius;
 		const y = coords.y * (this.canvas.height - radius*2 - this.me.height*2) + radius + this.me.height;
-		// console.log(coords.x);
 
 		this.c.beginPath();
 		this.c.fillStyle = colors.primary;
@@ -174,7 +182,7 @@ export class PongGame extends HTMLElement {
 		this.c.fill();
 		this.c.closePath();
 
-		this.setBallVelocity(x, y); // Todo?: Normalize values before passing into function? Might fix ball changing x direction too early on variying screen widths? Y axis works on different screen heights, so just do with x whatever we're doing with y, and things should work?
+		this.setBallVelocity(x, y);
 	}
 
 	drawCountdown() {
@@ -188,15 +196,27 @@ export class PongGame extends HTMLElement {
 	}
 
 	drawPlayer(player) {
-		const y = player.id === store.state.socketId ? this.canvas.height-player.height : 0;
+		const isMe = player.id === store.state.socketId;
+		const x = isMe ? player.x : this.canvas.width - player.x - player.width; // This is key since player 1 and 2 has inverted views.
+		const y = isMe ? this.canvas.height-player.height : 0;
 		player.y = y;
 		this.c.beginPath();
 		this.c.fillStyle = colors.primary;
-		this.c.fillRect(player.x, y, player.width, player.height);
+		// this.c.fillRect(player.x, y, player.width, player.height);
+		this.c.fillRect(x, y, player.width, player.height);
 		this.c.font = '10px sans-serif';
 		this.c.fillStyle = colors.black;
-		this.c.fillText(player.username, player.x, y+player.height, player.width);
+		// this.c.fillText(player.username, player.x, y+player.height, player.width);
+		this.c.fillText(player.username, x, y+player.height, player.width);
 		this.c.closePath();
+	}
+
+	drawScores() {
+		this.scores.innerHTML = '';
+		let playersHtml = '<ul>';
+		Object.values(this.players).forEach(player => playersHtml += `<li>${player.username} (${player.score})</li>`);
+		playersHtml += '</ul>';
+		this.scores.innerHTML += playersHtml;
 	}
 
 	keydownHandler(e) {
@@ -278,15 +298,15 @@ export class PongGame extends HTMLElement {
 		const movingTowardsMe = this.ball.velocity.y > 0;
 		const player = movingTowardsMe ? this.me : Object.values(this.players)[1];
 		if (!player) return;
+		const playerX = movingTowardsMe ? player.x : this.canvas.width - player.x - player.width; // This is key since player 1 and 2 has inverted views.
 		const playerY = movingTowardsMe ? player.y : player.y + player.height;
 		const ballY = movingTowardsMe ? y + this.ball.radius : y - this.ball.radius;
 		const yThreshold = Math.min(Math.abs(this.ball.velocity.y), 9999); // todo: remember velocity.y is 0-1
-		const hitX = (x - player.x) / player.width; // where on the x axis of the player the ball hit. between 0 and 1.
+		const hitX = (x - playerX) / player.width; // where on the x axis of the player the ball hit. between 0 and 1.
 		const phi = .75 * Math.PI * (hitX*2 - 1);
 		const isCrossingX = hitX >= 0 && hitX <= 1;
 		const isCrossingY = movingTowardsMe ? ballY >= playerY && ballY <= playerY + yThreshold : ballY <= playerY && ballY >= playerY - yThreshold;
 		const isCrossingBoundaries = x - this.ball.radius <= 0 || x >= this.canvas.width - this.ball.radius;
-		console.log(x);
 
 		if (isCrossingY && isCrossingX) {
 			const velocityX = 2*Math.sin(phi) / 1000;
@@ -294,11 +314,15 @@ export class PongGame extends HTMLElement {
 			// velocityY = -(this.ball.velocity.y*1.1); // speed increase // todo: remember velocity.y is 0-1
 			updateBallVelocity({x: velocityX, y: velocityY});
 		} else if (isCrossingY && !isCrossingX) {
-			if(movingTowardsMe) {
-				++Object.values(this.players)[1].score; // todo: add scoring functionality. // todo: avoid crashing if only 1 player.
-			} else {
-				++this.me.score;
-			}
+			const opponent = movingTowardsMe ? Object.values(this.players)[1] : this.me;
+
+			// Timeout (and consecutive clearTimeout) of minimum 17ms is required so we avoid sending twice to server, since client side code is running in requestAnimationFrame aka 60fps, while server is running in a setTimeout with 30fps.
+			this.updateScoreTimeout = setTimeout(() => {
+				updatePlayerScore(opponent.id, opponent.score+1);
+				resetBallInfo();
+				clearTimeout(this.updateScoreTimeout);
+			}, 500);
+
 			// const {x: newBallX, y: newBallY} = this.ball.getDefaultPos();
 			// const newBallVelocity = this.ball.getDefaultVelocity();
 			// this.ball.x = newBallX;
@@ -352,13 +376,5 @@ export class PongGame extends HTMLElement {
 		const x = Math.min(this.canvas.width, Math.max(0, touchX));
 		const pos = x / this.canvas.width;
 		updatePlayerPos(pos);
-	}
-
-	updateScores() {
-		this.scores.innerHTML = '';
-		let playersHtml = '<ul>';
-		Object.values(this.players).forEach(player => playersHtml += `<li>${player.username} (${player.score})</li>`);
-		playersHtml += '</ul>';
-		this.scores.innerHTML += playersHtml;
 	}
 }
