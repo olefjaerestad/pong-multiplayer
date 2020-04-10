@@ -1,8 +1,6 @@
 import {store} from '../store/store.js';
 
 export class MyApp extends HTMLElement {
-	isLoggedIn = false;
-	isInLobby = false;
 
 	render() {
 		this.innerHTML = '';
@@ -21,6 +19,8 @@ export class MyApp extends HTMLElement {
 	}
 
 	connectedCallback() {
+		this.isLoggedIn = false;
+		this.isInLobby = false;
 		this.mainMenu = document.createElement('main-menu');
 		this.pongGame = document.createElement('pong-game');
 

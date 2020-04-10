@@ -68,18 +68,23 @@ export class MainMenu extends HTMLElement {
 
 		style.textContent = /*css*/`
 			main-menu h1 {
-				font-size: 45vw;
+				font-size: 30vw;
+				-webkit-text-fill-color: transparent;
+				-webkit-text-stroke: 1px white;
+				background: linear-gradient(to bottom, red, yellow);
+				background-clip: text;
+  			-webkit-background-clip: text;
 				margin: 0;
-				transform: translate3d(-50%,-50%,0);
 				position: fixed;
-				top: 50%;
-				left: 50%;
-				opacity: .5;
+				top: 30%;
+				left: calc(50% - 1.25em); /* Instead of translate, due to https://stackoverflow.com/questions/55725461/webkit-background-clip-text-on-an-element-with-transition-is-not-working-after */
+				opacity: .9;
+				filter: drop-shadow(0px 0px 10px yellow);
 			}
 			main-menu .forms {
 				transform: translate3d(-50%,-50%,0);
 				position: fixed;
-				top: 50%;
+				top: 70%;
 				left: 50%;
 			}
 		`;

@@ -1,5 +1,6 @@
 Todo:
 - Styling!
+- Remove unused fonts.
 - When clicking "Start" button, disable it until game is over.
 - Game Rules: first to x points.
 - When winner is crowned: "Restart game?" and "Go to main menu" buttons.
@@ -12,6 +13,11 @@ Todo:
 - Simpler id's/gamepins?
 
 In progress:
+- App doesn't run in:
+	- iOS Safari (Constantly disconnects from server).
+	- iOS or Chrome (Constantly disconnects from server).
+	- OSX Firefox ('SyntaxError: private fields are not currently supported, in store-class.js:45:9'). Fixed.
+	- OSX Safari ('SyntaxError: Unexpected token '='. Expected an opening '(' before a method's parameter list'). Fixed.
 
 Probably done/Keep an eye on:
 - When player2 joins _after_ the game has started, he gets 2 points the first time player1 fails. Doesn't seem to be consistently reproducable. Fix it though.

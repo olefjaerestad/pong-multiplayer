@@ -1,3 +1,16 @@
+html {
+	--c-white: hsl(0deg, 0%, 100%);
+	--c-background-1: hsl(246, 40%, 18%);
+	--c-background-2: hsl(332, 100%, 40%);
+	--c-background-3: hsl(40, 100%, 40%);
+
+	font-family: neon;
+	color: var(--c-white);
+	background: linear-gradient(to bottom, var(--c-background-1), var(--c-background-2));
+	background: linear-gradient(to bottom, var(--c-background-1) 20%, var(--c-background-2) 80%, var(--c-background-3));
+	height: 100%;
+}
+
 * {
 	box-sizing: border-box;
 }

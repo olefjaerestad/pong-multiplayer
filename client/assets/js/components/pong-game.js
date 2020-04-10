@@ -210,7 +210,7 @@ export class PongGame extends HTMLElement {
 		if (!this.currentCountdown) return;
 
 		this.c.beginPath();
-		this.c.font = '100px sans-serif';
+		this.c.font = '100px neon';
 		this.c.fillStyle = colors.primary;
 		this.c.fillText(this.currentCountdown.toString(), this.canvas.width/2-30, this.canvas.height/2+30);
 		this.c.closePath();
@@ -225,7 +225,7 @@ export class PongGame extends HTMLElement {
 		this.c.fillStyle = player.id === this.player1.id ? colors.primary : colors.secondary;
 		// this.c.fillRect(player.x, y, player.width, player.height);
 		this.c.fillRect(x, y, player.width, player.height);
-		this.c.font = '10px sans-serif';
+		this.c.font = '10px neon';
 		this.c.fillStyle = colors.black;
 		// this.c.fillText(player.username, player.x, y+player.height, player.width);
 		this.c.fillText(player.username, x, y+player.height);
@@ -234,9 +234,21 @@ export class PongGame extends HTMLElement {
 
 	drawScores() {
 		this.scores.innerHTML = '';
-		let playersHtml = '<ul>';
-		Object.values(this.players).forEach(player => playersHtml += `<li>${player.username} (${player.score})</li>`);
-		playersHtml += '</ul>';
+		// let playersHtml = '<ul>';
+		// Object.values(this.players).forEach(player => playersHtml += `<li>${player.username} (${player.score})</li>`);
+		// playersHtml += '</ul>';
+		let playersHtml = `
+			<table>
+				<thead>
+					<tr>
+						<th style="text-align: left;">Username</th><th style="text-align: right;">Score</th>
+					</tr>
+				</thead>
+				<tbody>
+		`;
+		Object.values(this.players).forEach(player => playersHtml += `<tr><td>${player.username}</td><td style="text-align: right;">${player.score}</td></tr>`);
+		playersHtml += '</tbody>';
+		playersHtml += '</table>';
 		this.scores.innerHTML += playersHtml;
 	}
 
@@ -265,7 +277,7 @@ export class PongGame extends HTMLElement {
 		this.scores.classList.add('scores');
 		this.startButton.textContent = 'Start';
 		this.actions.appendChild(this.startButton);
-		this.sidebar.innerHTML = `<h2>Gamepin: ${store.state.lobbyId}</h2>`;
+		this.sidebar.innerHTML = `<p>Gamepin:<br>${store.state.lobbyId}</p>`;
 		this.sidebar.appendChild(this.scores);
 		this.sidebar.appendChild(this.actions);
 		this.game.appendChild(this.canvas);
@@ -276,7 +288,6 @@ export class PongGame extends HTMLElement {
 				display: flex;
 			}
 			pong-game .game {
-				background-color: black;
 				flex: 1;
 			}
 			pong-game canvas {
@@ -284,8 +295,17 @@ export class PongGame extends HTMLElement {
 				max-height: 100%;
 			}
 			pong-game .sidebar {
-				background-color: lightgreen;
+				background-color: rgba(0,0,0,.5);
 				width: 200px;
+			}
+			pong-game .scores table {
+				width: 100%;
+				border-collapse: collapse;
+			}
+			pong-game .scores table th,
+			pong-game .scores table td {
+				padding: 5px 10px;
+				border-bottom: 1px solid #fff;
 			}
 		`;
 

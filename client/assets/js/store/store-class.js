@@ -29,6 +29,7 @@
 export class Store {
 	constructor(initialState, actions) {
 		this.actions = {};
+		this._subscribedCallbacks = [];
 		if (actions) for (const action of Object.keys(actions)) this.actions[action] = actions[action].bind(this);
 
 		this.proxyHandler = {
@@ -42,26 +43,26 @@ export class Store {
 			set: (obj, prop, value, receiver) => {
 				const oldVal = obj[prop];
 				obj[prop] = value;
-				this.#subscribedCallbacks.forEach(callback => callback(prop, value, oldVal, obj, this.state));
+				this._subscribedCallbacks.forEach(callback => callback(prop, value, oldVal, obj, this.state));
 				return true;
 			}
 		}
 
 		this.state = new Proxy(initialState, this.proxyHandler);
 	}
-	#subscribedCallbacks = [];
+	// #subscribedCallbacks = [];
 	subscribe(callback) {
 		try {
 			if ( typeof callback !== 'function' ) throw new Error(`Subscribe callback must be a function. Received ${typeof callback}.`);
-			this.#subscribedCallbacks.push(callback);
+			this._subscribedCallbacks.push(callback);
 		} catch(e) {
 			console.warn(e);
 		}
 	}
 	unsubscribe(callback) {
-		const index = this.#subscribedCallbacks.indexOf(callback);
+		const index = this._subscribedCallbacks.indexOf(callback);
 		if (index >= 0) {
-			this.#subscribedCallbacks.splice(this.#subscribedCallbacks.indexOf(callback), 1);
+			this._subscribedCallbacks.splice(this._subscribedCallbacks.indexOf(callback), 1);
 		} else {
 			console.warn('Callback passed to unsubscribe() was never registered with subscribe(). Unsubscription unsuccessful.');
 		}
