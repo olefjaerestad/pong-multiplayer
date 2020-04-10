@@ -5,58 +5,15 @@ import {resetBallInfo, startGame, updateBallVelocity, updateLobbyCountdown, upda
 
 
 const colors = {
-	white: 'hsl(0, 0%, 100%)',
-	black: 'hsl(0, 0%, 0%)',
-	// primary: 'hsl(286, 100%, 50%)',
-	primary: 'hsl(297, 100%, 50%)', // magenta
-	secondary: 'hsl(56, 100%, 50%)', // yellow
-	tertiary: 'hsl(191, 98%, 44%)', // blue
-	primaryTransparent: 'hsla(286, 100%, 90%, .4)',
+	background1: getComputedStyle(document.documentElement).getPropertyValue('--c-background-1'), // blue
+	background2: getComputedStyle(document.documentElement).getPropertyValue('--c-background-2'), // magenta
+	background3: getComputedStyle(document.documentElement).getPropertyValue('--c-background-3'), // yellow
+	black: getComputedStyle(document.documentElement).getPropertyValue('--c-black'),
+	blue: getComputedStyle(document.documentElement).getPropertyValue('--c-blue'),
+	white: getComputedStyle(document.documentElement).getPropertyValue('--c-white'),
+	whiteTransparent: getComputedStyle(document.documentElement).getPropertyValue('--c-white-tp'),
+	yellow: getComputedStyle(document.documentElement).getPropertyValue('--c-yellow'),
 }
-
-/**
- * A Line to bounce the Ball with
- * @param {boolean} isPlayer player controlled
- * @param {HTMLCanvasElement} canvas the canvas element this Line belongs to
- */
-/* function Player (isPlayer, canvas) {
-	// this.canvas = canvas;
-	// this.getCalculatedWidth = () => {
-	// 	return Math.max(this.canvas.width / 10, 70);
-	// }
-	// this.width = this.getCalculatedWidth();
-	// this.height = 10;
-	// this.x = (canvas.width-this.width) / 2;
-	// this.y = isPlayer ? canvas.height-this.height : 0;
-	// this.velocity = 10;
-	// this.isPlayer = isPlayer;
-	// this.score = 0;
-	// this.c = this.canvas.getContext('2d');
-	// this.width = 0;
-	// this.height = 0;
-	// this.x = 0;
-	// this.y = 0;
-	// this.velocity = 0;
-	// this.isPlayer = isPlayer;
-	// this.score = 0;
-	// this.c = this.canvas.getContext('2d');
-
-	this.update = () => {
-		this.draw();
-	}
-
-	this.draw = () => {
-		console.log(canvas.width, this.x);
-		this.c.beginPath();
-		this.c.fillStyle = colors.primary;
-		this.c.fillRect(this.x, this.y, this.width, this.height);
-		this.c.fillStyle = 'hsla(0, 100%, 100%, .3)';
-		this.c.fillStyle = colors.primaryTransparent;
-		this.c.font = `${canvas.height / 10}px sans-serif`; // 100
-		this.c.fillText(this.score, (canvas.width-canvas.height/20)/2, isPlayer ? this.y+this.height-canvas.height/10 : this.y+canvas.height/6);
-		this.c.closePath();
-	}
-} */
 
 export class PongGame extends HTMLElement {
 	constructor() {
@@ -181,7 +138,7 @@ export class PongGame extends HTMLElement {
 
 		this.addEventListeners();
 		this.render();
-		this.run();
+		this.requestedAnimationFrame = requestAnimationFrame(this.run);
 	}
 
 	disconnectedCallback() {
@@ -198,7 +155,7 @@ export class PongGame extends HTMLElement {
 		const y = coords.y * (this.canvas.height - radius*2 - this.me.height*2) + radius + this.me.height;
 
 		this.c.beginPath();
-		this.c.fillStyle = colors.tertiary;
+		this.c.fillStyle = colors.blue;
 		this.c.arc(x, y, radius, 0, Math.PI * 2);
 		this.c.fill();
 		this.c.closePath();
@@ -211,7 +168,7 @@ export class PongGame extends HTMLElement {
 
 		this.c.beginPath();
 		this.c.font = '100px neon';
-		this.c.fillStyle = colors.primary;
+		this.c.fillStyle = colors.yellow;
 		this.c.fillText(this.currentCountdown.toString(), this.canvas.width/2-30, this.canvas.height/2+30);
 		this.c.closePath();
 	}
@@ -222,13 +179,15 @@ export class PongGame extends HTMLElement {
 		const y = isMe ? this.canvas.height-player.height : 0;
 		player.y = y;
 		this.c.beginPath();
-		this.c.fillStyle = player.id === this.player1.id ? colors.primary : colors.secondary;
-		// this.c.fillRect(player.x, y, player.width, player.height);
+		// this.c.fillStyle = player.id === this.player1.id ? colors.background2 : colors.background3;
+		this.c.fillStyle = colors.white;
 		this.c.fillRect(x, y, player.width, player.height);
 		this.c.font = '10px neon';
 		this.c.fillStyle = colors.black;
-		// this.c.fillText(player.username, player.x, y+player.height, player.width);
 		this.c.fillText(player.username, x, y+player.height);
+		this.c.font = `50px neon`;
+		this.c.fillStyle = colors.whiteTransparent;
+		this.c.fillText(player.score, this.canvas.width/2-15, isMe ? player.y - 20 : player.y + 70);
 		this.c.closePath();
 	}
 
@@ -275,9 +234,10 @@ export class PongGame extends HTMLElement {
 		this.game.classList.add('game');
 		this.sidebar.classList.add('sidebar');
 		this.scores.classList.add('scores');
+		this.actions.classList.add('actions');
 		this.startButton.textContent = 'Start';
 		this.actions.appendChild(this.startButton);
-		this.sidebar.innerHTML = `<p>Gamepin:<br>${store.state.lobbyId}</p>`;
+		this.sidebar.innerHTML = `<p class="header">Gamepin:<br>${store.state.lobbyId}</p>`;
 		this.sidebar.appendChild(this.scores);
 		this.sidebar.appendChild(this.actions);
 		this.game.appendChild(this.canvas);
@@ -298,6 +258,12 @@ export class PongGame extends HTMLElement {
 				background-color: rgba(0,0,0,.5);
 				width: 200px;
 			}
+			pong-game .sidebar .header {
+				padding: 10px;
+			}
+			pong-game .scores {
+				margin-bottom: 10px;
+			}
 			pong-game .scores table {
 				width: 100%;
 				border-collapse: collapse;
@@ -306,6 +272,9 @@ export class PongGame extends HTMLElement {
 			pong-game .scores table td {
 				padding: 5px 10px;
 				border-bottom: 1px solid #fff;
+			}
+			pong-game .actions {
+				padding: 10px;
 			}
 		`;
 

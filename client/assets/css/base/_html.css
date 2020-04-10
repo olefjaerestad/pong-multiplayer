@@ -1,5 +1,10 @@
 html {
 	--c-white: hsl(0deg, 0%, 100%);
+	--c-white-tp: hsla(0deg, 0%, 100%, .5);
+	--c-black: hsla(0deg, 0%, 0%);
+	--c-black-tp: hsla(0deg, 0%, 0%, .5);
+	--c-blue: hsl(172, 100%, 50%);
+	--c-yellow: hsl(40, 100%, 50%);
 	--c-background-1: hsl(246, 40%, 18%);
 	--c-background-2: hsl(332, 100%, 40%);
 	--c-background-3: hsl(40, 100%, 40%);

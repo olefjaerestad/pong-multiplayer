@@ -1,0 +1,46 @@
+form {
+	min-width: 0;
+}
+
+button,
+textarea,
+[type="text"],
+[type="submit"] {
+	font-family: inherit;
+	font-size: 1rem;
+	min-width: 0;
+	max-width: 100%;
+	padding: 10px;
+}
+
+textarea,
+[type="text"] {
+	color: var(--c-white);
+	background-color: var(--c-black-tp);
+	padding: 10px;
+	border: 0;
+}
+
+button,
+[type="submit"] {
+	text-underline-position: under;
+	color: var(--c-white);
+	background-color: var(--c-background-2);
+	border: none;
+}
+button:focus,
+button:hover,
+[type="submit"]:hover,
+[type="submit"]:focus {
+	text-decoration: underline;
+}
+
+::-webkit-input-placeholder { /* Edge */
+  color: var(--c-white);
+}
+:-ms-input-placeholder { /* Internet Explorer 10-11 */
+  color: var(--c-white);
+}
+::placeholder {
+  color: var(--c-white);
+}
