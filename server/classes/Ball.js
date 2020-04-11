@@ -19,7 +19,7 @@ function Ball (/* canvas */) {
 	this.reverseY = .5; // 0-1. This is key since player 1 and 2 has inverted views.
 	this.velocity = { // 0-1
 		x: 0,
-		y: .002,
+		y: Math.random() > .5 ? .002 : -.002,
 	}
 	// this.c = this.canvas.getContext('2d');
 
@@ -44,7 +44,7 @@ Ball.prototype.getDefaultPos = function() {
 Ball.prototype.getDefaultVelocity = function() {
 	return {
 		x: 0,
-		y: .002,
+		y: Math.random() > .5 ? .002 : -.002,
 	}
 }
 

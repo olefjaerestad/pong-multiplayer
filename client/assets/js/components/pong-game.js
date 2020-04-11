@@ -2,6 +2,8 @@ import {socket} from '../websockets/socket.js';
 import {actionTypes, extractData} from '../../../../constants/client.js';
 import {store} from '../store/store.js';
 import {resetBallInfo, startGame, updateBallVelocity, updateLobbyCountdown, updatePlayerPos, updatePlayerScore} from '../websockets/actions.js';
+import cogIcon from '../icons/cog.js';
+import shareIcon from '../icons/share.js';
 
 
 const colors = {
@@ -19,10 +21,12 @@ export class PongGame extends HTMLElement {
 	constructor() {
 		super();
 		this.ball = {};
+		this.canShare = 'share' in navigator;
 		this.canvasBoundingClientRect = {};
 		this.currentCountdown = null;
 		this.keyState = {}; // currently pressed keys
 		this.players = {};
+		this.shareGamepinTimeoutId = 0;
 		this.updateScoreTimeoutId = 0;
 
 		this.addEventListeners = this.addEventListeners.bind(this);
@@ -36,11 +40,13 @@ export class PongGame extends HTMLElement {
 		this.render = this.render.bind(this);
 		this.resizeHandler = this.resizeHandler.bind(this);
 		this.run = this.run.bind(this);
+		this.shareGamepin = this.shareGamepin.bind(this);
 		this.setBallVelocity = this.setBallVelocity.bind(this);
 		this.setCanvasSize = this.setCanvasSize.bind(this);
 		this.setElementSizes = this.setElementSizes.bind(this);
 		this.setPlayerPos = this.setPlayerPos.bind(this);
 		this.startCountdown = this.startCountdown.bind(this);
+		this.toggleSidebar = this.toggleSidebar.bind(this);
 		this.touchmoveHandler = this.touchmoveHandler.bind(this);
 	}
 	
@@ -60,20 +66,25 @@ export class PongGame extends HTMLElement {
 		window.addEventListener('resize', this.resizeHandler);
 		window.addEventListener('keydown', this.keydownHandler);
 		window.addEventListener('keyup', this.keyupHandler);
-		this.canvas.addEventListener('touchstart', this.touchmoveHandler);
-		this.canvas.addEventListener('touchmove', this.touchmoveHandler);
+		this.game.addEventListener('touchstart', this.touchmoveHandler);
+		this.game.addEventListener('touchmove', this.touchmoveHandler);
 		this.startButton.addEventListener('click', this.startCountdown);
+		this.shareGamepinButton.addEventListener('click', this.shareGamepin);
+		this.toggleSidebarButton.addEventListener('click', this.toggleSidebar);
 	}
 
 	connectedCallback() {
 		this.canvas = document.createElement('canvas');
 		this.game = document.createElement('main');
+		this.toggleSidebarButton = document.createElement('button');
 		this.sidebar = document.createElement('aside');
+		this.gamepinInfo = document.createElement('div');
+		this.gamepinTextarea = document.createElement('textarea');
+		this.shareGamepinButton = document.createElement('button');
 		this.scores = document.createElement('div');
 		this.actions = document.createElement('div');
 		this.startButton = document.createElement('button');
 		this.c = this.canvas.getContext('2d');
-		// this.player1 = new Player(true, this.canvas);
 
 		socket.addEventListener('message', ({data}) => {
 			const [action, ...args] = extractData(data);
@@ -92,7 +103,6 @@ export class PongGame extends HTMLElement {
 					// console.log(action, args);
 					break;
 				case actionTypes.UPDATE_BALL_INFO:
-					// this.players[args[0]].x = (this.canvas.width - this.players[args[0]].width) * args[1];
 					this.ball = args[0];
 					// console.log(action, args);
 					break;
@@ -180,7 +190,7 @@ export class PongGame extends HTMLElement {
 		player.y = y;
 		this.c.beginPath();
 		// this.c.fillStyle = player.id === this.player1.id ? colors.background2 : colors.background3;
-		this.c.fillStyle = colors.white;
+		this.c.fillStyle = colors.blue;
 		this.c.fillRect(x, y, player.width, player.height);
 		this.c.font = '10px neon';
 		this.c.fillStyle = colors.black;
@@ -223,9 +233,11 @@ export class PongGame extends HTMLElement {
 		window.removeEventListener('resize', this.resizeHandler);
 		window.removeEventListener('keydown', this.keydownHandler);
 		window.removeEventListener('keyup', this.keyupHandler);
-		this.canvas.removeEventListener('touchstart', this.touchmoveHandler);
-		this.canvas.removeEventListener('touchmove', this.touchmoveHandler);
+		this.game.removeEventListener('touchstart', this.touchmoveHandler);
+		this.game.removeEventListener('touchmove', this.touchmoveHandler);
 		this.startButton.removeEventListener('click', this.startCountdown);
+		this.shareGamepinButton.removeEventListener('click', this.shareGamepin);
+		this.toggleSidebarButton.removeEventListener('click', this.toggleSidebar);
 	}
 
 	render() {
@@ -233,12 +245,23 @@ export class PongGame extends HTMLElement {
 		const style = document.createElement('style');
 		this.game.classList.add('game');
 		this.sidebar.classList.add('sidebar');
+		this.toggleSidebarButton.classList.add('toggleSidebar');
+		this.gamepinInfo.classList.add('gamepinInfo');
+		this.shareGamepinButton.classList.add('unstyled')
 		this.scores.classList.add('scores');
 		this.actions.classList.add('actions');
 		this.startButton.textContent = 'Start';
+		this.toggleSidebarButton.innerHTML = cogIcon;
+		this.gamepinTextarea.value = store.state.lobbyId;
+		this.gamepinTextarea.readOnly = true;
+		this.gamepinTextarea.id = 'gamepin';
+		this.shareGamepinButton.innerHTML = `<small>${this.canShare ? `${shareIcon}Share` : 'Copy'} gamepin</small>`;
 		this.actions.appendChild(this.startButton);
-		this.sidebar.innerHTML = `<p class="header">Gamepin:<br>${store.state.lobbyId}</p>`;
+		this.gamepinInfo.innerHTML = `<label for="gamepin">Gamepin:</label>`;
+		this.gamepinInfo.appendChild(this.gamepinTextarea);
+		this.gamepinInfo.appendChild(this.shareGamepinButton);
 		this.sidebar.appendChild(this.scores);
+		this.sidebar.appendChild(this.gamepinInfo);
 		this.sidebar.appendChild(this.actions);
 		this.game.appendChild(this.canvas);
 		this.style.textContent = style.textContent = /*css*/`
@@ -254,15 +277,63 @@ export class PongGame extends HTMLElement {
 				max-width: 100%;
 				max-height: 100%;
 			}
-			pong-game .sidebar {
-				background-color: rgba(0,0,0,.5);
-				width: 200px;
+			pong-game .toggleSidebar {
+				line-height: 0;
+				position: fixed;
+				top: 0;
+				left: 0;
+				opacity: .5;
+				transition: all .2s ease-in-out;
 			}
-			pong-game .sidebar .header {
+			pong-game.sidebarIsActive .toggleSidebar {
+				opacity: 1;
+			}
+			pong-game .toggleSidebar svg {
+				stroke: var(--c-background-1);
+			}
+			pong-game .toggleSidebar svg g {
+				fill: var(--c-background-1);
+			}
+			@media (min-width: 640px) {
+				pong-game .toggleSidebar {
+					display: none;
+				}
+			}
+			pong-game .sidebar {
+				background-color: var(--c-black-tp);
+				width: 200px;
+				height: 100%;
+				position: fixed;
+				top: 0;
+				left: 0;
+				transform: translate3d(-100%,0,0);
+				transition: all .2s ease-in-out;
+			}
+			pong-game.sidebarIsActive .sidebar {
+				transform: translate3d(0,0,0);
+			}
+			@media (min-width: 640px) {
+				pong-game .sidebar {
+					position: relative;
+					transform: translate3d(0,0,0);
+				}
+			}
+			pong-game .gamepinInfo {
 				padding: 10px;
+				margin-bottom: 10px;
+			}
+			pong-game .gamepinInfo textarea {
+				background-color: hsla(0,0%, 100%, 0.15);
+				resize: none;
 			}
 			pong-game .scores {
+				margin-top: 50px;
 				margin-bottom: 10px;
+			}
+			@media (min-width: 640px) {
+				pong-game .scores {
+					margin-top: 10px;
+				}
 			}
 			pong-game .scores table {
 				width: 100%;
@@ -278,17 +349,16 @@ export class PongGame extends HTMLElement {
 			}
 		`;
 
-		this.appendChild(this.game);
 		this.appendChild(this.sidebar);
+		this.appendChild(this.game);
+		this.appendChild(this.toggleSidebarButton);
 		this.appendChild(style);
+		this.toggleSidebar();
 		this.setElementSizes();
-		// this.setCanvasSize();
 	}
 
 	resizeHandler(e) {
 		this.setElementSizes();
-		// this.player2.width = this.player2.getCalculatedWidth();
-		// this.ball.radius = this.ball.getCalculatedRadius();
 	}
 
 	run() {
@@ -304,6 +374,27 @@ export class PongGame extends HTMLElement {
 		this.requestedAnimationFrame = requestAnimationFrame(this.run);
 	}
 
+	async shareGamepin() {
+		try {
+			await navigator.share({
+				text: store.state.lobbyId,
+			});
+		} catch (err) {
+			if (this.shareGamepinTimeoutId !== 0) return;
+
+			this.gamepinTextarea.select();
+			this.gamepinTextarea.setSelectionRange(0, 99999); /* For mobile devices, ref. https://www.w3schools.com/howto/howto_js_copy_clipboard.asp */
+			document.execCommand('copy');
+			const buttonHtml = this.shareGamepinButton.innerHTML;
+			this.shareGamepinButton.innerHTML = '<small>Gamepin copied!</small>';
+			this.shareGamepinTimeoutId = setTimeout(() => {
+				this.shareGamepinButton.innerHTML = buttonHtml;
+				clearTimeout(this.shareGamepinTimeoutId);
+				this.shareGamepinTimeoutId = 0;
+			}, 3000);
+		}
+	}
+
 	setBallVelocity(x, y) { // see ~12:00 here https://www.youtube.com/watch?v=KApAJhkkqkA for more concise implementation
 		const movingTowardsMe = this.ball.velocity.y > 0;
 		const player = movingTowardsMe ? this.me : Object.values(this.players)[1];
@@ -311,7 +402,7 @@ export class PongGame extends HTMLElement {
 		const playerX = movingTowardsMe ? player.x : this.canvas.width - player.x - player.width; // This is key since player 1 and 2 has inverted views.
 		const playerY = movingTowardsMe ? player.y : player.y + player.height;
 		const ballY = movingTowardsMe ? y + this.ball.radius : y - this.ball.radius;
-		const yThreshold = Math.min(Math.abs(this.ball.velocity.y), 9999); // todo: remember velocity.y is 0-1
+		const yThreshold = Math.min(Math.abs(this.canvas.height*this.ball.velocity.y), 9999);
 		const hitX = (x - playerX) / player.width; // where on the x axis of the player the ball hit. between 0 and 1.
 		const phi = .75 * Math.PI * (hitX*2 - 1);
 		const isCrossingX = hitX >= 0 && hitX <= 1;
@@ -321,7 +412,7 @@ export class PongGame extends HTMLElement {
 		if (isCrossingY && isCrossingX) {
 			const velocityX = 2*Math.sin(phi) / 1000;
 			const velocityY = -this.ball.velocity.y;
-			// velocityY = -(this.ball.velocity.y*1.1); // speed increase // todo: remember velocity.y is 0-1
+			// const velocityY = -(this.ball.velocity.y*1.1); // speed increase // todo: remember velocity.y is 0-1
 			updateBallVelocity({x: velocityX, y: velocityY});
 		} else if (isCrossingY && !isCrossingX) {
 			const opponent = movingTowardsMe ? Object.values(this.players)[1] : this.me;
@@ -335,24 +426,16 @@ export class PongGame extends HTMLElement {
 					this.updateScoreTimeoutId = 0;
 				}, 500);
 			}
-
-			// const {x: newBallX, y: newBallY} = this.ball.getDefaultPos();
-			// const newBallVelocity = this.ball.getDefaultVelocity();
-			// this.ball.x = newBallX;
-			// this.ball.y = newBallY;
-			// this.ball.velocity = newBallVelocity;
-			// todo: reset ball stats (send to server)
 		}
 
 		if (isCrossingBoundaries) {
-			// this.ball.velocity.x = -this.ball.velocity.x;
 			updateBallVelocity({x: -this.ball.velocity.x, y: this.ball.velocity.y});
 		}
 	}
 
 	setCanvasSize() {
 		this.canvas.width = parseInt(getComputedStyle(this.game).width);
-		this.canvas.height = "ontouchstart" in document.documentElement ? parseInt(getComputedStyle(this.game).height)-100 : parseInt(getComputedStyle(this.game).height);
+		this.canvas.height = "ontouchstart" in document.documentElement ? window.innerHeight-100 : window.innerHeight;
 		this.canvasBoundingClientRect = this.canvas.getBoundingClientRect();
 	}
 
@@ -382,6 +465,10 @@ export class PongGame extends HTMLElement {
 				clearInterval(intervalId);
 			}
 		}, 1000);
+	}
+
+	toggleSidebar() {
+		this.classList.toggle('sidebarIsActive');
 	}
 
 	touchmoveHandler(e) {

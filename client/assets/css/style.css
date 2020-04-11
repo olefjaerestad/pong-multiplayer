@@ -3,3 +3,5 @@
 @import './base/_html.css';
 @import './base/_body.css';
 @import './base/_form.css';
+
+@import './components/_icon.css';

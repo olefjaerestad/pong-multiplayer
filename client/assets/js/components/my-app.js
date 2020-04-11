@@ -3,6 +3,7 @@ import {store} from '../store/store.js';
 export class MyApp extends HTMLElement {
 
 	render() {
+		const style = document.createElement('style');
 		this.innerHTML = '';
 
 		this.mainMenu.addEventListener('created-player', () => {
@@ -13,7 +14,16 @@ export class MyApp extends HTMLElement {
 			this.isInLobby = true;
 			this.mainMenu.setAttribute('is-in-lobby', this.isInLobby);
 		});
+		style.textContent = /*css*/`
+			my-app {
+				/* background: linear-gradient(to bottom, var(--c-background-1), var(--c-background-2)); */
+				background: linear-gradient(to bottom, var(--c-background-1) 20%, var(--c-background-2) 80%, var(--c-background-3));
+				height: 100vh;
+				display: block;
+			}
+		`
 		this.appendChild(this.mainMenu);
+		this.appendChild(style);
 
 		if (this.isLoggedIn && this.isInLobby) this.appendChild(this.pongGame);
 	}

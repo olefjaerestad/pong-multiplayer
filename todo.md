@@ -1,10 +1,12 @@
 Todo:
-- Remove unused fonts.
-- Blurred player names (Tried a bit but unable to fix atm). 
+- Differentiate the players, visually.
+- Blurred player names (Tried a bit but unable to fix atm).
 	- https://www.html5rocks.com/en/tutorials/canvas/hidpi/
 	- https://stackoverflow.com/questions/15661339/how-do-i-fix-blurry-text-in-my-html5-canvas
 	- https://medium.com/wdstack/fixing-html5-2d-canvas-blur-8ebe27db07da
-- Adjust ball speed.
+- Adjust ball speed. Should it increase over time?
+- When player2 joins, leaves and rejoins, game should still work (although score will obviously be reset).
+- Make game installable (PWA).
 - Ball velocity changes when player hits it are a bit exaggerated?
 - When clicking "Start" button, disable it until game is over.
 - Game Rules: first to x points.
@@ -16,16 +18,11 @@ Todo:
 - Chat? Private and/or public? Premade messages?
 - Store player positions server side, instead of only sending them between players? This way, current player1 position is visible for player2 as soon as he joins.
 - Simpler id's/gamepins?
+- When launched; make sure to have https/ssl?
+- When launched; make sure the client websocket connects to the correct domain.
 
 In progress:
-- Styling!
-	- Place the sidebar off-screen on small screens?
-	- Differentiate the players, visually.
-- App doesn't run in:
-	- iOS Safari (Constantly disconnects from server).
-	- iOS or Chrome (Constantly disconnects from server).
-	- OSX Firefox ('SyntaxError: private fields are not currently supported, in store-class.js:45:9'). Fixed.
-	- OSX Safari ('SyntaxError: Unexpected token '='. Expected an opening '(' before a method's parameter list'). Fixed.
+
 
 Probably done/Keep an eye on:
 - When player2 joins _after_ the game has started, he gets 2 points the first time player1 fails. Doesn't seem to be consistently reproducable. Fix it though.
@@ -53,3 +50,19 @@ Done:
 - Player 2 unable to hit ball after implementing isCrossingBounds. Sometimes able (it seems player1 positions are "the correct ones" and will count towards hits), but ball x direction changes the wrong way. Fix.
 - Scoring.
 - When player joins lobby, all player positions (and scores?) are reset. They shouldn't be. Also, use LEFT_LOBBY action instead of UPDATE_PLAYERS_IN_LOBBY.
+- App doesn't run in:
+	- iOS Safari (Constantly disconnects from server). Fixed.
+	- iOS or Chrome (Constantly disconnects from server). Fixed.
+	- OSX Firefox ('SyntaxError: private fields are not currently supported, in store-class.js:45:9'). Fixed.
+	- OSX Safari ('SyntaxError: Unexpected token '='. Expected an opening '(' before a method's parameter list'). Fixed.
+- Styling!
+	- Place the sidebar off-screen on small screens? Fixed.
+	- OSX Firefox background color. Fixed.
+	- OSX Safari input background color. Fixed.
+	- OSX Safari input placeholder color. Fixed.
+- Remove unused fonts.
+- More spacing below pongGame.me on smaller screens, and make that area touchable.
+- The settings button should be a cog SVG.
+- Delete socket on disconnect.
+- 'Copy' gamepin button. Use native share?
+- Randomize whether ball is served towards player1 or player2.

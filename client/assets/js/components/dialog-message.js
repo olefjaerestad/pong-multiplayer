@@ -13,6 +13,9 @@ export class DialogMessage extends HTMLElement {
 			</dialog>
 			<style>
 				dialog-message dialog {
+					color: var(--c-black);
+					background-color: var(--c-white);
+					padding: 10px;
 					position: fixed;
     			top: 20px;
 				}

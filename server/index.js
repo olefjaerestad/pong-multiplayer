@@ -97,6 +97,7 @@ ws.on('connection', (socket, req) => {
 		players[socketId].leaveLobby();
 		leftLobby(socketsToUpdate, socketId);
 
+		delete sockets[socketId];
 		delete players[socketId];
 		if (lobbies[socketId]) {
 			delete lobbies[socketId];

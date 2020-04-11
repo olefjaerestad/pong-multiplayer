@@ -1,7 +1,8 @@
 import {actionTypes, extractData} from '../../../constants/client.js';
 import {store} from '../store/store.js';
 
-export const socket = new WebSocket('ws://localhost:9000');
+// export const socket = new WebSocket('ws://localhost:9000');
+export const socket = new WebSocket(`ws://${location.hostname}:9000`);
 
 socket.addEventListener('open', e => console.log(e));
 socket.addEventListener('message', ({data}) => {

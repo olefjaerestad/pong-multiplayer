@@ -11,6 +11,8 @@ textarea,
 	min-width: 0;
 	max-width: 100%;
 	padding: 10px;
+	border-radius: 2px;
+	margin: 0;
 }
 
 textarea,
@@ -27,6 +29,8 @@ button,
 	color: var(--c-white);
 	background-color: var(--c-background-2);
 	border: none;
+	-webkit-appearance: none;
+	appearance: none;
 }
 button:focus,
 button:hover,
@@ -34,13 +38,41 @@ button:hover,
 [type="submit"]:focus {
 	text-decoration: underline;
 }
+button.unstyled,
+[type="submit"].unstyled {
+	background-color: transparent;
+	padding: 0;
+}
+button.unstyled [fill]:not([fill*="none"]),
+[type="submit"].unstyled [fill]:not([fill*="none"]) {
+	fill: var(--c-white);
+}
+button.unstyled [stroke]:not([stroke*="none"]),
+[type="submit"].unstyled [stroke]:not([stroke*="none"]) {
+	stroke: var(--c-white);
+}
 
-::-webkit-input-placeholder { /* Edge */
-  color: var(--c-white);
+/**
+ * Placeholder styling.
+ * Avoid using CSS variables in pseudo elements.
+ * See 'Known issues' here https://caniuse.com/#feat=css-variables.
+ * Seems to affect OSX Safari too.
+ */
+::-webkit-input-placeholder { /* Old Chrome/Opera/Edge */
+	color: #fff;
 }
-:-ms-input-placeholder { /* Internet Explorer 10-11 */
-  color: var(--c-white);
+::-moz-placeholder { /* Firefox 19+ */
+	color: #fff;
+	opacity: 1;
 }
-::placeholder {
-  color: var(--c-white);
+:-ms-input-placeholder { /* IE 10+ */
+  color: #fff;
+}
+:-moz-placeholder { /* Firefox 18- */
+	color: #fff;
+	opacity: 1;
+}
+::placeholder { /* Latest Chrome/Safari/Firefox */
+	color: #fff;
+	opacity: 1;
 }
