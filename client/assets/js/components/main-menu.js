@@ -79,7 +79,7 @@ export class MainMenu extends HTMLElement {
   			-webkit-background-clip: text;
 				margin: 0;
 				position: fixed;
-				bottom: 40%;
+				bottom: 50%;
 				left: calc(50% - 1.32em); /* Instead of translate, due to https://stackoverflow.com/questions/55725461/webkit-background-clip-text-on-an-element-with-transition-is-not-working-after */
 				opacity: .9;
 				filter: drop-shadow(0px 0px 10px yellow);

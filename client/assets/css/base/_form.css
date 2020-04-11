@@ -38,6 +38,10 @@ button:hover,
 [type="submit"]:focus {
 	text-decoration: underline;
 }
+button:active,
+[type="submit"]:active {
+	transform: translate3d(0,2px,0);
+}
 button.unstyled,
 [type="submit"].unstyled {
 	background-color: transparent;
@@ -50,6 +54,11 @@ button.unstyled [fill]:not([fill*="none"]),
 button.unstyled [stroke]:not([stroke*="none"]),
 [type="submit"].unstyled [stroke]:not([stroke*="none"]) {
 	stroke: var(--c-white);
+}
+
+[disabled] {
+	opacity: .5;
+	pointer-events: none;
 }
 
 /**

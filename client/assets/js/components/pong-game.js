@@ -48,6 +48,7 @@ export class PongGame extends HTMLElement {
 		this.startCountdown = this.startCountdown.bind(this);
 		this.toggleSidebar = this.toggleSidebar.bind(this);
 		this.touchmoveHandler = this.touchmoveHandler.bind(this);
+		this.updateActionButtonsStatus = this.updateActionButtonsStatus.bind(this);
 	}
 	
 	get isPlayer1() {
@@ -117,19 +118,10 @@ export class PongGame extends HTMLElement {
 					break;
 				case actionTypes.UPDATE_LOBBY_COUNTDOWN:
 					this.currentCountdown = args[0];
+					this.updateActionButtonsStatus();
 					// console.log(action, args);
 					break;
 				case actionTypes.UPDATE_PLAYERS_IN_LOBBY:
-					/* const players = args[0].reduce((players, player) => {
-						player.width = this.canvas.width * player.normalizedWidth; // convert from 0-1 to px
-						player.x = (this.canvas.width - player.width) * player.x; // convert from 0-1 to px
-						players[player.id] = player;
-						return players;
-					}, {});
-
-					this.players = players; // todo: this resets the position of the players already in lobby
-					this.drawScores();
-					break; */
 					args[0].forEach(player => {
 						if (this.players[player.id]) return; // Don't replace existing players.
 
@@ -319,6 +311,7 @@ export class PongGame extends HTMLElement {
 				}
 			}
 			pong-game .gamepinInfo {
+				background-color: var(--c-black-tp);
 				padding: 10px;
 				margin-bottom: 10px;
 			}
@@ -354,7 +347,15 @@ export class PongGame extends HTMLElement {
 		this.appendChild(this.toggleSidebarButton);
 		this.appendChild(style);
 		this.toggleSidebar();
+
+		/**
+		 * We call this.setElementSizes twice.
+		 * First time to account for newly connected player(s).
+		 * Second time in case browser hasn't loaded CSS yet.
+		 * A bit hacky/stupid, but it works.
+		 */
 		this.setElementSizes();
+		setTimeout(() => this.setElementSizes(), 100);
 	}
 
 	resizeHandler(e) {
@@ -455,7 +456,6 @@ export class PongGame extends HTMLElement {
 	}
 
 	startCountdown() {
-		// todo: make some variable 'isPlaying' that when true, disables the play button
 		let countdownSecs = 3;
 		const intervalId = setInterval(() => {
 			updateLobbyCountdown(countdownSecs--);
@@ -476,5 +476,9 @@ export class PongGame extends HTMLElement {
 		const x = Math.min(this.canvas.width, Math.max(0, touchX));
 		const pos = x / this.canvas.width;
 		updatePlayerPos(pos);
+	}
+
+	updateActionButtonsStatus() {
+		if (this.currentCountdown) this.startButton.disabled = true;
 	}
 }

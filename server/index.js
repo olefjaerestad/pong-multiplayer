@@ -97,12 +97,12 @@ ws.on('connection', (socket, req) => {
 		players[socketId].leaveLobby();
 		leftLobby(socketsToUpdate, socketId);
 
-		delete sockets[socketId];
-		delete players[socketId];
 		if (lobbies[socketId]) {
 			delete lobbies[socketId];
 			kickPlayers(socketsToUpdate, 'The game host disconnected.');
 		}
+		delete players[socketId];
+		delete sockets[socketId];
 	});
 });
 

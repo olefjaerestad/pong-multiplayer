@@ -1,20 +1,16 @@
 Todo:
-- Differentiate the players, visually.
 - Blurred player names (Tried a bit but unable to fix atm).
 	- https://www.html5rocks.com/en/tutorials/canvas/hidpi/
 	- https://stackoverflow.com/questions/15661339/how-do-i-fix-blurry-text-in-my-html5-canvas
 	- https://medium.com/wdstack/fixing-html5-2d-canvas-blur-8ebe27db07da
 - Adjust ball speed. Should it increase over time?
-- When player2 joins, leaves and rejoins, game should still work (although score will obviously be reset).
 - Make game installable (PWA).
 - Ball velocity changes when player hits it are a bit exaggerated?
-- When clicking "Start" button, disable it until game is over.
-- Game Rules: first to x points.
 - When winner is crowned: "Restart game?" and "Go to main menu" buttons.
 - What should happen if more than 2 players join the same lobby? Should it even be possible?
-- Spectator mode.
 - Restart game.
-- Pause game.
+- Pause game?
+- Spectator mode?
 - Chat? Private and/or public? Premade messages?
 - Store player positions server side, instead of only sending them between players? This way, current player1 position is visible for player2 as soon as he joins.
 - Simpler id's/gamepins?
@@ -22,10 +18,12 @@ Todo:
 - When launched; make sure the client websocket connects to the correct domain.
 
 In progress:
-
+- Game Rules: first to x points.
+- When clicking "Start" button, disable it until game is over.
 
 Probably done/Keep an eye on:
 - When player2 joins _after_ the game has started, he gets 2 points the first time player1 fails. Doesn't seem to be consistently reproducable. Fix it though.
+- (iOS) Chrome: sometimes the canvas is way too low. Wrap initial PongGame.setElementSizes() in a timeout?
 
 Done:
 - Error handling if joining non-existent lobby.
@@ -66,3 +64,7 @@ Done:
 - Delete socket on disconnect.
 - 'Copy' gamepin button. Use native share?
 - Randomize whether ball is served towards player1 or player2.
+
+Don't do:
+- Differentiate the players, visually. Update: Doing it requires a tiny performance hit. Don't think it's worth it.
+- When player2 joins, leaves and rejoins, an already started game should still work (although score will obviously be reset). Update: Hmm, is there any point really?
