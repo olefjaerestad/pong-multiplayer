@@ -1,4 +1,5 @@
 Todo:
+- iOS Safari/Chrome: .gamepinInfo gets transparent background when clicking "Copy gamepin".
 - Blurred player names (Tried a bit but unable to fix atm).
 	- https://www.html5rocks.com/en/tutorials/canvas/hidpi/
 	- https://stackoverflow.com/questions/15661339/how-do-i-fix-blurry-text-in-my-html5-canvas
