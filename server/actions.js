@@ -1,4 +1,9 @@
 const {actionTypes} = require('../constants/server.js');
+const {players} = require('./globals.js');
+
+const crownWinner = (sockets, socketId) => {
+	sockets.forEach(socket => socket.send(JSON.stringify([actionTypes.CROWN_WINNER, socketId])));
+}
 
 const joinLobbyFail = (socket, reason) => {
 	socket.send(JSON.stringify([actionTypes.JOIN_LOBBY_FAIL, reason]));
@@ -10,6 +15,11 @@ const kickPlayers = (sockets, reason) => {
 
 const leftLobby = (sockets, socketId) => {
 	sockets.forEach(socket => socket.send(JSON.stringify([actionTypes.LEFT_LOBBY, socketId])));
+}
+
+const resetPlayerScores = (sockets) => {
+	sockets.forEach(socket => players[socket.id].score = 0);
+	sockets.forEach(socket => socket.send(JSON.stringify([actionTypes.RESET_PLAYER_SCORES])));
 }
 
 const updateLobbyId = (socket, lobbyId) => {
@@ -33,9 +43,11 @@ const updateSocketId = (socket, socketId) => {
 }
 
 module.exports = {
+	crownWinner,
 	joinLobbyFail,
 	kickPlayers,
 	leftLobby,
+	resetPlayerScores,
 	updateLobbyId,
 	updatePlayerPos,
 	updatePlayerScore,

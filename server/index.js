@@ -16,11 +16,19 @@ const fs = require('fs');
 const path = require('path');
 const {actionTypes, extractData} = require('../constants/server');
 const {sockets, lobbies, players} = require('./globals');
-const {createLobby, createPlayer, getOpponents, joinLobby} = require('./functions');
 const {
+	createLobby,
+	createPlayer,
+	getLobbyFromPlayerId,
+	getOpponents,
+	joinLobby
+} = require('./functions');
+const {
+	crownWinner,
 	joinLobbyFail,
 	kickPlayers,
 	leftLobby,
+	resetPlayerScores,
 	updateLobbyId, 
 	updatePlayerPos,
 	updatePlayerScore,
@@ -32,16 +40,18 @@ let doFireWatchEvent = true;
 
 ws.on('connection', (socket, req) => {
 	const socketId = v4();
+	socket.id = socketId;
 	sockets[socketId] = socket;
 	updateSocketId(socket, socketId);
 	socket.on('message', data => {
 		const [action, ...args] = extractData(data);
 
 		switch (action) {
-			case actionTypes.CREATE_PLAYER:
+			case actionTypes.CREATE_PLAYER: {
 				createPlayer(socketId, args[0]);
 				break;
-			case actionTypes.CREATE_LOBBY:
+			}
+			case actionTypes.CREATE_LOBBY: {
 				createLobby(socketId)
 					.then(lobbyId => {
 						updateLobbyId(socket, lobbyId);
@@ -49,7 +59,8 @@ ws.on('connection', (socket, req) => {
 					})
 					.catch((err) => joinLobbyFail(socket, err));
 				break;
-			case actionTypes.JOIN_LOBBY:
+			}
+			case actionTypes.JOIN_LOBBY: {
 				joinLobby(args[0], args[1])
 					.then(lobbyId => {
 						updateLobbyId(socket, lobbyId);
@@ -57,34 +68,50 @@ ws.on('connection', (socket, req) => {
 					})
 					.catch((err) => joinLobbyFail(socket, err));
 				break;
-			case actionTypes.RESET_BALL_INFO:
+			}
+			case actionTypes.RESET_BALL_INFO: {
 				lobbies[args[0]].resetBallInfo();
 				break;
-			case actionTypes.START_GAME:
+			}
+			case actionTypes.START_GAME: {
 				// console.log(action, args);
+				resetPlayerScores(getOpponents(socketId));
 				lobbies[args[0]].startGame(args[1]);
 				break;
-			case actionTypes.UPDATE_BALL_POS:
+			}
+			case actionTypes.UPDATE_BALL_POS: {
 				break;
-			case actionTypes.UPDATE_BALL_VELOCITY:
+			}
+			case actionTypes.UPDATE_BALL_VELOCITY: {
 				// console.log(action, args);
 				lobbies[args[0]].updateBallVelocity(args[1]);
 				break;
-			case actionTypes.UPDATE_LOBBY_COUNTDOWN:
+			}
+			case actionTypes.UPDATE_LOBBY_COUNTDOWN: {
 				// console.log(action, args);
 				lobbies[args[0]].updateCountdown(args[1]);
 				break;
-			case actionTypes.UPDATE_PLAYER_POS:
+			}
+			case actionTypes.UPDATE_PLAYER_POS: {
 				updatePlayerPos(getOpponents(socketId), socketId, args[0]);
 				// console.log(action, args);
 				break;
-			case actionTypes.UPDATE_PLAYER_SCORE:
+			}
+			case actionTypes.UPDATE_PLAYER_SCORE: {
+				const lobby = getLobbyFromPlayerId(args[0]);
+				const opponents = getOpponents(args[0]);
 				players[args[0]].score = args[1];
-				updatePlayerScore(getOpponents(args[0]), args[0], args[1]);
+				updatePlayerScore(opponents, args[0], args[1]);
+				if (players[args[0]].score >= lobby.scoreLimit) {
+					crownWinner(opponents, args[0]);
+					lobby.stopGame();
+				}
 				// console.log(action, args);
 				break;
-			default:
+			}
+			default: {
 				break;
+			}
 		}
 	});
 

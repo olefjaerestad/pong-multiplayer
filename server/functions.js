@@ -3,14 +3,12 @@ const Lobby = require('./classes/Lobby');
 const Player = require('./classes/Player');
 
 const createPlayer = (socketId, username) => {
+	// console.log('createPlayer');
 	players[socketId] = new Player(socketId, username);
-	console.log('createPlayer');
-	// console.log(players);
 }
 
 const createLobby = (socketId) => {
-	console.log('createLobby');
-	// console.log(lobbies);
+	// console.log('createLobby');
 	return new Promise((resolve, reject) => {
 		if (!players[socketId]) reject('You can\'t create a lobby since you\'re not logged in.');
 
@@ -23,8 +21,7 @@ const createLobby = (socketId) => {
 }
 
 const joinLobby = (socketId, lobbyId) => {
-	console.log('joinLobby');
-	// console.log(lobbies);
+	// console.log('joinLobby');
 	return new Promise((resolve, reject) => {
 		if (!players[socketId]) reject('Invalid player ID');
 		if (!lobbies[lobbyId]) reject('Invalid gamepin');
@@ -32,6 +29,11 @@ const joinLobby = (socketId, lobbyId) => {
 			.then(() => resolve(lobbyId))
 			.catch(err => reject(err));
 	});
+}
+
+const getLobbyFromPlayerId = (playerId) => {
+	const lobby = lobbies[(players[playerId]).lobby];
+	return lobby ? lobby : null;
 }
 
 const getOpponents = (socketId) => {
@@ -42,6 +44,7 @@ const getOpponents = (socketId) => {
 module.exports = {
 	createLobby,
 	createPlayer,
+	getLobbyFromPlayerId,
 	getOpponents,
 	joinLobby,
 }

@@ -1,6 +1,6 @@
 {
   "name": "pong-multiplayer",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "Multiplayer Pong!",
   "main": "server/index.js",
   "scripts": {

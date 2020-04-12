@@ -32,8 +32,10 @@ export class PongGame extends HTMLElement {
 		this.addEventListeners = this.addEventListeners.bind(this);
 		this.drawBall = this.drawBall.bind(this);
 		this.drawCountdown = this.drawCountdown.bind(this);
+		this.drawMessage = this.drawMessage.bind(this);
 		this.drawPlayer = this.drawPlayer.bind(this);
 		this.drawScores = this.drawScores.bind(this);
+		this.hideMessage = this.hideMessage.bind(this);
 		this.keydownHandler = this.keydownHandler.bind(this);
 		this.keyupHandler = this.keyupHandler.bind(this);
 		this.removeEventListeners = this.removeEventListeners.bind(this);
@@ -77,6 +79,7 @@ export class PongGame extends HTMLElement {
 	connectedCallback() {
 		this.canvas = document.createElement('canvas');
 		this.game = document.createElement('main');
+		this.message = document.createElement('div');
 		this.toggleSidebarButton = document.createElement('button');
 		this.sidebar = document.createElement('aside');
 		this.gamepinInfo = document.createElement('div');
@@ -91,37 +94,60 @@ export class PongGame extends HTMLElement {
 			const [action, ...args] = extractData(data);
 			
 			switch(action) {
-				case actionTypes.KICK:
+				case actionTypes.CROWN_WINNER: {
+					this.currentCountdown = null;
+					this.drawMessage(`
+						<h2>${this.players[args[0]].username} won!</h2>
+						<small>Note: If you didn't win, don't feel too bad, okay?</small>
+					`);
+					this.updateActionButtonsStatus();
+					// console.log(action, args);
+					break;
+				}
+				case actionTypes.KICK: {
 					const dialog = document.createElement('dialog-message');
 					dialog.addEventListener('close', () => location.reload());
 					dialog.setAttribute('message', `You were disconnected from the lobby. Reason: ${args[0]} You'll be taken to the main menu shortly.`);
 					document.body.appendChild(dialog);
 					// console.log(action, args);
 					break;
-				case actionTypes.LEFT_LOBBY:
+				}
+				case actionTypes.LEFT_LOBBY: {
 					delete this.players[args[0]];
 					this.drawScores();
 					// console.log(action, args);
 					break;
-				case actionTypes.UPDATE_BALL_INFO:
+				}
+				case actionTypes.RESET_PLAYER_SCORES: {
+					Object.values(this.players).forEach(player => player.score = 0);
+					this.drawScores();
+					// console.log(action, args);
+					break;
+				}
+				case actionTypes.UPDATE_BALL_INFO: {
 					this.ball = args[0];
 					// console.log(action, args);
 					break;
-				case actionTypes.UPDATE_PLAYER_POS:
+				}
+				case actionTypes.UPDATE_PLAYER_POS: {
 					this.players[args[0]].x = (this.canvas.width - this.players[args[0]].width) * args[1];
 					// console.log(action, args);
 					break;
-				case actionTypes.UPDATE_PLAYER_SCORE:
+				}
+				case actionTypes.UPDATE_PLAYER_SCORE: {
 					this.players[args[0]].score = args[1];
 					this.drawScores();
 					// console.log(action, args);
 					break;
-				case actionTypes.UPDATE_LOBBY_COUNTDOWN:
+				}
+				case actionTypes.UPDATE_LOBBY_COUNTDOWN: {
 					this.currentCountdown = args[0];
+					this.hideMessage();
 					this.updateActionButtonsStatus();
 					// console.log(action, args);
 					break;
-				case actionTypes.UPDATE_PLAYERS_IN_LOBBY:
+				}
+				case actionTypes.UPDATE_PLAYERS_IN_LOBBY: {
 					args[0].forEach(player => {
 						if (this.players[player.id]) return; // Don't replace existing players.
 
@@ -133,8 +159,10 @@ export class PongGame extends HTMLElement {
 					this.drawScores();
 					// console.log(action, args);
 					break;
-				default:
+				}
+				default: {
 					break;
+				}
 			}
 		});
 
@@ -175,6 +203,11 @@ export class PongGame extends HTMLElement {
 		this.c.closePath();
 	}
 
+	drawMessage(message) {
+		this.message.innerHTML = message;
+		this.message.classList.add('isActive');
+	}
+
 	drawPlayer(player) {
 		const isMe = player.id === store.state.socketId;
 		const x = isMe ? player.x : this.canvas.width - player.x - player.width; // This is key since player 1 and 2 has inverted views.
@@ -213,6 +246,10 @@ export class PongGame extends HTMLElement {
 		this.scores.innerHTML += playersHtml;
 	}
 
+	hideMessage() {
+		this.message.classList.remove('isActive');
+	}
+
 	keydownHandler(e) {
 		this.keyState[e.keyCode || e.which] = true;
 	}
@@ -236,6 +273,7 @@ export class PongGame extends HTMLElement {
 		this.innerHTML = '';
 		const style = document.createElement('style');
 		this.game.classList.add('game');
+		this.message.classList.add('message');
 		this.sidebar.classList.add('sidebar');
 		this.toggleSidebarButton.classList.add('toggleSidebar');
 		this.gamepinInfo.classList.add('gamepinInfo');
@@ -248,6 +286,7 @@ export class PongGame extends HTMLElement {
 		this.gamepinTextarea.readOnly = true;
 		this.gamepinTextarea.id = 'gamepin';
 		this.shareGamepinButton.innerHTML = `<small>${this.canShare ? `${shareIcon}Share` : 'Copy'} gamepin</small>`;
+		this.actions.innerHTML += '<p style="margin-top: 0;">First to 10 points!</p>';
 		this.actions.appendChild(this.startButton);
 		this.gamepinInfo.innerHTML = `<label for="gamepin">Gamepin:</label>`;
 		this.gamepinInfo.appendChild(this.gamepinTextarea);
@@ -256,6 +295,7 @@ export class PongGame extends HTMLElement {
 		this.sidebar.appendChild(this.gamepinInfo);
 		this.sidebar.appendChild(this.actions);
 		this.game.appendChild(this.canvas);
+		this.game.appendChild(this.message);
 		this.style.textContent = style.textContent = /*css*/`
 			pong-game {
 				width: 100vw;
@@ -264,10 +304,30 @@ export class PongGame extends HTMLElement {
 			}
 			pong-game .game {
 				flex: 1;
+				position: relative;
 			}
 			pong-game canvas {
 				max-width: 100%;
 				max-height: 100%;
+			}
+			pong-game .message {
+				color: var(--c-white);
+				background-color: var(--c-black-tp);
+				padding: 20px;
+				display: none;
+				position: absolute;
+				top: 50%;
+				left: 50%;
+				transform: translate3d(-50%,-50%,0);
+			}
+			pong-game .message.isActive {
+				display: block;
+			}
+			pong-game .message > *:first-child {
+				margin-top: 0;
+			}
+			pong-game .message > *:last-child {
+				margin-bottom: 0;
 			}
 			pong-game .toggleSidebar {
 				line-height: 0;
@@ -275,13 +335,24 @@ export class PongGame extends HTMLElement {
 				top: 0;
 				left: 0;
 				opacity: .5;
+				z-index: 2;
 				transition: all .2s ease-in-out;
+			}
+			pong-game .toggleSidebar:hover {
+				opacity: 1;
+			}
+			pong-game .toggleSidebar svg {
+				transition: inherit;
+			}
+			pong-game .toggleSidebar:hover svg {
+				transform: rotateZ(90deg);
 			}
 			pong-game.sidebarIsActive .toggleSidebar {
 				opacity: 1;
 			}
 			pong-game .toggleSidebar svg {
 				stroke: var(--c-background-1);
+				width: 20px;
 			}
 			pong-game .toggleSidebar svg g {
 				fill: var(--c-background-1);
@@ -298,6 +369,7 @@ export class PongGame extends HTMLElement {
 				position: fixed;
 				top: 0;
 				left: 0;
+				z-index: 1;
 				transform: translate3d(-100%,0,0);
 				transition: all .2s ease-in-out;
 			}
@@ -311,7 +383,7 @@ export class PongGame extends HTMLElement {
 				}
 			}
 			pong-game .gamepinInfo {
-				background-color: var(--c-black-tp);
+				background-color: var(--c-black);
 				padding: 10px;
 				margin-bottom: 10px;
 			}
@@ -412,14 +484,14 @@ export class PongGame extends HTMLElement {
 
 		if (isCrossingY && isCrossingX) {
 			const velocityX = 2*Math.sin(phi) / 1000;
-			const velocityY = -this.ball.velocity.y;
-			// const velocityY = -(this.ball.velocity.y*1.1); // speed increase // todo: remember velocity.y is 0-1
+			// const velocityY = -this.ball.velocity.y; // no speed increase
+			const velocityY = -(this.ball.velocity.y*1.05); // speed increase
 			updateBallVelocity({x: velocityX, y: velocityY});
 		} else if (isCrossingY && !isCrossingX) {
 			const opponent = movingTowardsMe ? Object.values(this.players)[1] : this.me;
 
 			// Timeout (and consecutive clearTimeout) of minimum 17ms is required so we avoid sending twice to server, since client side code is running in requestAnimationFrame aka 60fps, while server is running in a setTimeout with 30fps. Hopefully the if check will prevent a strange (and hard to reproduce) bug where score would actually be updated twice.
-			if (!this.updateScoreTimeoutId) {
+			if (!this.updateScoreTimeoutId && opponent) {
 				this.updateScoreTimeoutId = setTimeout(() => {
 					updatePlayerScore(opponent.id, opponent.score+1);
 					resetBallInfo();
@@ -479,6 +551,10 @@ export class PongGame extends HTMLElement {
 	}
 
 	updateActionButtonsStatus() {
-		if (this.currentCountdown) this.startButton.disabled = true;
+		if (this.currentCountdown === null) {
+			this.startButton.disabled = false;
+		} else {
+			this.startButton.disabled = true;
+		}
 	}
 }
