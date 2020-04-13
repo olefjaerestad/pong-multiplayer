@@ -41,6 +41,7 @@ function Lobby(id) {
 		clearInterval(this.gameIntervalId);
 	}
 	this.updateBallVelocity = function(coords) {
+		coords.y = coords.y >= .2 ? .2 : coords.y; // Cap velocity.y.
 		this.ball.velocity = coords;
 		// console.log(this.ball.velocity);
 	}

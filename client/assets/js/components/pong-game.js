@@ -98,7 +98,8 @@ export class PongGame extends HTMLElement {
 					this.currentCountdown = null;
 					this.drawMessage(`
 						<h2>${this.players[args[0]].username} won!</h2>
-						<small>Note: If you didn't win, don't feel too bad, okay?</small>
+						<small>Note: If you didn't win, don't feel too bad, okay?</small><br>
+						<small>Note 2: You can restart the game by clicking the "Start" button in the side menu.</small>
 					`);
 					this.updateActionButtonsStatus();
 					// console.log(action, args);
@@ -475,7 +476,8 @@ export class PongGame extends HTMLElement {
 		const playerX = movingTowardsMe ? player.x : this.canvas.width - player.x - player.width; // This is key since player 1 and 2 has inverted views.
 		const playerY = movingTowardsMe ? player.y : player.y + player.height;
 		const ballY = movingTowardsMe ? y + this.ball.radius : y - this.ball.radius;
-		const yThreshold = Math.min(Math.abs(this.canvas.height*this.ball.velocity.y), 9999);
+		// const yThreshold = Math.min(Math.abs(this.canvas.height*this.ball.velocity.y), 9999); // Todo: When the ball has high enough velocity.y, it gets stuck inside the player (atleast on mobile).
+		const yThreshold = Math.min(Math.abs((this.canvas.height*1.5)*this.ball.velocity.y), 9999); // Todo: When the ball has high enough velocity.y, it gets stuck inside the player (atleast on mobile).
 		const hitX = (x - playerX) / player.width; // where on the x axis of the player the ball hit. between 0 and 1.
 		const phi = .75 * Math.PI * (hitX*2 - 1);
 		const isCrossingX = hitX >= 0 && hitX <= 1;

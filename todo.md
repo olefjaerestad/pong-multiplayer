@@ -1,4 +1,5 @@
 Todo:
+- When the ball has high enough velocity.y, it gets stuck inside the player (especially on mobil). Fix.
 - Simpler id's/gamepins? Make your own?
 - Make game installable (PWA).
 - Blurred player names (Tried a bit but unable to fix atm).
