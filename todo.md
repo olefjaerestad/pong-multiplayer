@@ -1,5 +1,5 @@
 Todo:
-- When the ball has high enough velocity.y, it gets stuck inside the player (especially on mobil). Fix.
+- iOS Safari: Ball sometimes passes through me. Especially when Ball.velocity.y has a high value (Maybe related: TypeError: undefined is not an object (evaluating 'this.ball.velocity.y')). Fix.
 - Simpler id's/gamepins? Make your own?
 - Make game installable (PWA).
 - Blurred player names (Tried a bit but unable to fix atm).
@@ -20,6 +20,7 @@ Probably done/Keep an eye on:
 - When player2 joins _after_ the game has started, he gets 2 points the first time player1 fails. Doesn't seem to be consistently reproducable. Fix it though.
 - (iOS) Chrome: sometimes the canvas is way too low. Wrap initial PongGame.setElementSizes() in a timeout?
 - Adjust ball speed. Should it increase over time?
+- When the ball has high enough velocity.y, it gets stuck inside the player (especially on mobile). Fix.
 
 Done:
 - Error handling if joining non-existent lobby.
@@ -64,6 +65,10 @@ Done:
 	- Stop game when winner is crowned.
 	- "Restart game" button.
 - When clicking "Start" button, disable it until game is over.
+- Both players get score at the same time. Fix.
+- When ball hits player, Ball.velocity.x sometimes goes in the opposite direction to what it should. Fix.
+- If ball isn't moving towards you, just return from PongGame.setBallVelocity(), since the oppononent will take care of the calculations.
+- Ball gets stuck when hitting the edges of the game board. Fix.
 
 Don't do:
 - Differentiate the players, visually. Update: Doing it requires a tiny performance hit. Don't think it's worth it.

@@ -17,11 +17,12 @@ const colors = {
 	yellow: getComputedStyle(document.documentElement).getPropertyValue('--c-yellow'),
 }
 
+const canShare  = 'share' in navigator;
+
 export class PongGame extends HTMLElement {
 	constructor() {
 		super();
 		this.ball = {};
-		this.canShare = 'share' in navigator;
 		this.canvasBoundingClientRect = {};
 		this.currentCountdown = null;
 		this.keyState = {}; // currently pressed keys
@@ -61,6 +62,12 @@ export class PongGame extends HTMLElement {
 		return this.players[store.state.socketId];
 	}
 
+	get opponent() {
+		const meIndex = Object.keys(this.players).indexOf(store.state.socketId);
+		const opponentIndex = meIndex === 0 ? 1 : 0;
+		return Object.values(this.players)[opponentIndex];
+	}
+
 	get player1() {
 		return this.players[store.state.lobbyId];
 	}
@@ -71,6 +78,7 @@ export class PongGame extends HTMLElement {
 		window.addEventListener('keyup', this.keyupHandler);
 		this.game.addEventListener('touchstart', this.touchmoveHandler);
 		this.game.addEventListener('touchmove', this.touchmoveHandler);
+		this.gamepinTextarea.addEventListener('click', e => {e.target.focus(); e.target.select();});
 		this.startButton.addEventListener('click', this.startCountdown);
 		this.shareGamepinButton.addEventListener('click', this.shareGamepin);
 		this.toggleSidebarButton.addEventListener('click', this.toggleSidebar);
@@ -127,6 +135,19 @@ export class PongGame extends HTMLElement {
 				}
 				case actionTypes.UPDATE_BALL_INFO: {
 					this.ball = args[0];
+					// console.log(action, args);
+					break;
+				}
+				case actionTypes.UPDATE_BALL_POS: {
+					this.ball.x = args[0];
+					this.ball.y = args[1];
+					this.ball.reverseX = args[2];
+					this.ball.reverseY = args[3];
+					// console.log(action, args);
+					break;
+				}
+				case actionTypes.UPDATE_BALL_VELOCITY: {
+					this.ball.velocity = args[0];
 					// console.log(action, args);
 					break;
 				}
@@ -286,7 +307,7 @@ export class PongGame extends HTMLElement {
 		this.gamepinTextarea.value = store.state.lobbyId;
 		this.gamepinTextarea.readOnly = true;
 		this.gamepinTextarea.id = 'gamepin';
-		this.shareGamepinButton.innerHTML = `<small>${this.canShare ? `${shareIcon}Share` : 'Copy'} gamepin</small>`;
+		this.shareGamepinButton.innerHTML = `<small>${canShare ? `${shareIcon}Share` : 'Copy'} gamepin</small>`;
 		this.actions.innerHTML += '<p style="margin-top: 0;">First to 10 points!</p>';
 		this.actions.appendChild(this.startButton);
 		this.gamepinInfo.innerHTML = `<label for="gamepin">Gamepin:</label>`;
@@ -342,6 +363,9 @@ export class PongGame extends HTMLElement {
 			pong-game .toggleSidebar:hover {
 				opacity: 1;
 			}
+			pong-game .toggleSidebar:active {
+				transition: none;
+			}
 			pong-game .toggleSidebar svg {
 				transition: inherit;
 			}
@@ -352,11 +376,11 @@ export class PongGame extends HTMLElement {
 				opacity: 1;
 			}
 			pong-game .toggleSidebar svg {
-				stroke: var(--c-background-1);
+				stroke: var(--c-white);
 				width: 20px;
 			}
 			pong-game .toggleSidebar svg g {
-				fill: var(--c-background-1);
+				fill: var(--c-white);
 			}
 			@media (min-width: 640px) {
 				pong-game .toggleSidebar {
@@ -448,54 +472,35 @@ export class PongGame extends HTMLElement {
 		this.requestedAnimationFrame = requestAnimationFrame(this.run);
 	}
 
-	async shareGamepin() {
-		try {
-			await navigator.share({
-				text: store.state.lobbyId,
-			});
-		} catch (err) {
-			if (this.shareGamepinTimeoutId !== 0) return;
-
-			this.gamepinTextarea.select();
-			this.gamepinTextarea.setSelectionRange(0, 99999); /* For mobile devices, ref. https://www.w3schools.com/howto/howto_js_copy_clipboard.asp */
-			document.execCommand('copy');
-			const buttonHtml = this.shareGamepinButton.innerHTML;
-			this.shareGamepinButton.innerHTML = '<small>Gamepin copied!</small>';
-			this.shareGamepinTimeoutId = setTimeout(() => {
-				this.shareGamepinButton.innerHTML = buttonHtml;
-				clearTimeout(this.shareGamepinTimeoutId);
-				this.shareGamepinTimeoutId = 0;
-			}, 3000);
-		}
-	}
-
 	setBallVelocity(x, y) { // see ~12:00 here https://www.youtube.com/watch?v=KApAJhkkqkA for more concise implementation
-		const movingTowardsMe = this.ball.velocity.y > 0;
-		const player = movingTowardsMe ? this.me : Object.values(this.players)[1];
-		if (!player) return;
-		const playerX = movingTowardsMe ? player.x : this.canvas.width - player.x - player.width; // This is key since player 1 and 2 has inverted views.
-		const playerY = movingTowardsMe ? player.y : player.y + player.height;
-		const ballY = movingTowardsMe ? y + this.ball.radius : y - this.ball.radius;
-		// const yThreshold = Math.min(Math.abs(this.canvas.height*this.ball.velocity.y), 9999); // Todo: When the ball has high enough velocity.y, it gets stuck inside the player (atleast on mobile).
-		const yThreshold = Math.min(Math.abs((this.canvas.height*1.5)*this.ball.velocity.y), 9999); // Todo: When the ball has high enough velocity.y, it gets stuck inside the player (atleast on mobile).
+		const movingTowardsMe = this.isPlayer1 ? this.ball.velocity.y > 0 : this.ball.velocity.y < 0;
+		if (!movingTowardsMe) return; // Opponent will take care of the calculations, our work here is done.
+		const player = this.me;
+		const playerX = player.x; // This is key since player 1 and 2 has inverted views.
+		const playerY = player.y;
+		const ballY = y + this.ball.radius;
+		const ballVelocityX = this.isPlayer1 ? this.ball.velocity.x : -this.ball.velocity.x; // Since player1 and player2 has inverted views.
+		const thresholdY = Math.min(Math.abs(this.canvas.height*this.ball.velocity.y), 9999);
 		const hitX = (x - playerX) / player.width; // where on the x axis of the player the ball hit. between 0 and 1.
 		const phi = .75 * Math.PI * (hitX*2 - 1);
 		const isCrossingX = hitX >= 0 && hitX <= 1;
-		const isCrossingY = movingTowardsMe ? ballY >= playerY && ballY <= playerY + yThreshold : ballY <= playerY && ballY >= playerY - yThreshold;
-		const isCrossingBoundaries = x - this.ball.radius <= 0 || x >= this.canvas.width - this.ball.radius;
+		const isCrossingY = ballY >= playerY && ballY <= playerY + thresholdY;
+		const isCrossingBoundaries = 
+			ballVelocityX <= 0 ?
+				x - this.ball.radius <= 0 : 
+				x + this.ball.radius >= this.canvas.width;
 
 		if (isCrossingY && isCrossingX) {
-			const velocityX = 2*Math.sin(phi) / 1000;
+			let velocityX = 4*Math.sin(phi) / 1000;
+			if (!this.isPlayer1) velocityX = -velocityX; // Since player1 and player2 has inverted views.
 			// const velocityY = -this.ball.velocity.y; // no speed increase
 			const velocityY = -(this.ball.velocity.y*1.05); // speed increase
 			updateBallVelocity({x: velocityX, y: velocityY});
 		} else if (isCrossingY && !isCrossingX) {
-			const opponent = movingTowardsMe ? Object.values(this.players)[1] : this.me;
-
 			// Timeout (and consecutive clearTimeout) of minimum 17ms is required so we avoid sending twice to server, since client side code is running in requestAnimationFrame aka 60fps, while server is running in a setTimeout with 30fps. Hopefully the if check will prevent a strange (and hard to reproduce) bug where score would actually be updated twice.
-			if (!this.updateScoreTimeoutId && opponent) {
+			if (!this.updateScoreTimeoutId && this.opponent) {
 				this.updateScoreTimeoutId = setTimeout(() => {
-					updatePlayerScore(opponent.id, opponent.score+1);
+					updatePlayerScore(this.opponent.id, this.opponent.score+1);
 					resetBallInfo();
 					clearTimeout(this.updateScoreTimeoutId);
 					this.updateScoreTimeoutId = 0;
@@ -527,6 +532,27 @@ export class PongGame extends HTMLElement {
 		if (toRight) pos = Math.min(1, x + this.me.velocity);
 		if (!toRight) pos = Math.max(0, x - this.me.velocity);
 		updatePlayerPos(pos);
+	}
+
+	async shareGamepin() {
+		try {
+			await navigator.share({
+				text: store.state.lobbyId,
+			});
+		} catch (err) {
+			if (this.shareGamepinTimeoutId !== 0) return;
+
+			this.gamepinTextarea.select();
+			this.gamepinTextarea.setSelectionRange(0, 99999); /* For mobile devices, ref. https://www.w3schools.com/howto/howto_js_copy_clipboard.asp */
+			document.execCommand('copy');
+			const buttonHtml = this.shareGamepinButton.innerHTML;
+			this.shareGamepinButton.innerHTML = '<small>Gamepin copied!</small>';
+			this.shareGamepinTimeoutId = setTimeout(() => {
+				this.shareGamepinButton.innerHTML = buttonHtml;
+				clearTimeout(this.shareGamepinTimeoutId);
+				this.shareGamepinTimeoutId = 0;
+			}, 3000);
+		}
 	}
 
 	startCountdown() {

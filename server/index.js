@@ -84,7 +84,7 @@ ws.on('connection', (socket, req) => {
 			}
 			case actionTypes.UPDATE_BALL_VELOCITY: {
 				// console.log(action, args);
-				lobbies[args[0]].updateBallVelocity(args[1]);
+				if (lobbies[args[0]]) lobbies[args[0]].updateBallVelocity(args[1]);
 				break;
 			}
 			case actionTypes.UPDATE_LOBBY_COUNTDOWN: {
