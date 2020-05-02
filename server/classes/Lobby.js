@@ -35,6 +35,13 @@ function Lobby(id) {
 			this.ball.y += this.ball.velocity.y;
 			this.ball.reverseX -= this.ball.velocity.x; // This is key since player 1 and 2 has inverted views.
 			this.ball.reverseY -= this.ball.velocity.y; // This is key since player 1 and 2 has inverted views.
+
+			// Round numbers to avoid sending unecessary large amounts of network/socket data. x needs 3 decimals, y needs 2.
+			this.ball.x = Math.round(this.ball.x * 1000) / 1000;
+			this.ball.reverseX = Math.round(this.ball.reverseX * 1000) / 1000;
+			this.ball.y = Math.round(this.ball.y * 100) / 100;
+			this.ball.reverseY = Math.round(this.ball.reverseY * 100) / 100;
+
 			// this.players.forEach(playerId => sockets[playerId].send(JSON.stringify([actionTypes.UPDATE_BALL_INFO, this.ball])));
 			this.players.forEach(playerId => {
 				if (sockets[playerId]) {
