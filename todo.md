@@ -75,3 +75,4 @@ Don't do:
 - When player2 joins, leaves and rejoins, an already started game should still work (although score will obviously be reset). Update: Hmm, is there any point really?
 - Store player positions server side, instead of only sending them between players? This way, current player1 position is visible for player2 as soon as he joins. Update: Too little gain to be worth the tiny performance hit of accessing server RAM?
 - iOS Safari/Chrome: .gamepinInfo gets transparent background when clicking "Copy gamepin".
+- Pass string in UPDATE_BALL_POS and UPDATE_PLAYER_POS? Update: Tried. Didn't make much of a performance improvement. Not worth it, seeing as it leads to less readable code too.
