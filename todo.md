@@ -1,4 +1,5 @@
 Todo:
+- Try https://www.npmjs.com/package/fast-json-stringify and https://www.npmjs.com/package/fast-json-parse for improved performance.
 - iOS Safari: Ball sometimes passes through me. Especially when Ball.velocity.y has a high value (Maybe related: TypeError: undefined is not an object (evaluating 'this.ball.velocity.y')). Fix.
 - Simpler id's/gamepins? Make your own?
 - Make game installable (PWA).
