@@ -25,11 +25,11 @@
   },
   "homepage": "https://github.com/olefjaerestad/pong-multiplayer#readme",
   "dependencies": {
-    "express": "^4.17.1",
-    "uuid": "^7.0.2",
-    "ws": "^7.4.6"
+    "express": "^4.18.1",
+    "uuid": "^8.3.2",
+    "ws": "^8.8.0"
   },
   "devDependencies": {
-    "nodemon": "^2.0.2"
+    "nodemon": "^2.0.19"
   }
 }
